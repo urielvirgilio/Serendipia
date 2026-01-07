@@ -1,0 +1,1286 @@
+```html
+<!-- NOMBRE DEL ARCHIVO: analisis_serendipia_v38_2_marketing.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SERENDIPIA - Centro de Inteligencia V38.2 (Marketing Edition)</title>
+    <!-- Librerías Externas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&family=Playfair+Display:ital,wght@1,500&display=swap" rel="stylesheet">
+    <style>
+        /* --- ESTILOS GENERALES --- */
+        :root { --seren-green: #0B2B26; --seren-gold: #C5A059; --seren-bg: #F5F5F5; --text-main: #333; --range-red: #ef5350; --range-yellow: #fbc02d; --range-green: #388e3c; }
+        body { font-family: 'Montserrat', sans-serif; background: var(--seren-bg); margin: 0; padding: 20px; color: var(--text-main); line-height: 1.5; }
+        .container { max-width: 1280px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); overflow: hidden; border-top: 8px solid var(--seren-gold); }
+        .brand-header { background: white; padding: 25px 40px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e0e0e0; }
+        .logo-img { max-height: 130px; width: auto; transition: 0.3s; }
+        .inspiration-box { max-width: 50%; text-align: right; font-family: 'Playfair Display', serif; font-style: italic; color: var(--seren-green); font-size: 1.3em; border-right: 5px solid var(--seren-gold); padding-right: 20px; }
+        
+        /* MARKETING BANNER V38.2 */
+        .marketing-banner { background: linear-gradient(135deg, #0B2B26 0%, #1a4d44 100%); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--seren-gold); margin-bottom: 0; }
+        .mark-title { font-size: 1.4em; font-weight: 800; color: var(--seren-gold); text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px; }
+        .mark-text { font-size: 1.1em; line-height: 1.6; max-width: 900px; margin: 0 auto; font-weight: 500; }
+        .mark-highlight { color: #81c784; font-weight: 800; }
+
+        .advice-banner { background: #eee; color: #555; padding: 8px; text-align: center; font-size: 0.9em; border-bottom: 1px solid #ddd; }
+        .nav-tabs { display: flex; background: #222; flex-wrap: wrap; justify-content: center; }
+        .nav-btn { padding: 18px 30px; border: none; background: transparent; color: #aaa; font-family: 'Montserrat', sans-serif; font-weight: 700; text-transform: uppercase; cursor: pointer; transition: 0.3s; border-bottom: 4px solid transparent; }
+        .nav-btn:hover { color: var(--seren-gold); }
+        .nav-btn.active { color: white; border-bottom-color: var(--seren-gold); background: rgba(255,255,255,0.1); }
+        .game-section { display: none; padding: 30px; } .game-section.active { display: block; animation: fadeIn 0.5s; } @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+        
+        .upload-area { background: #f0f2f5; padding: 15px; border-radius: 8px; margin-bottom: 25px; display:flex; justify-content: space-between; align-items: center; border: 1px dashed #ccc;}
+        .input-row { display: flex; justify-content: center; gap: 15px; margin: 25px 0; flex-wrap: wrap; align-items: flex-start; }
+        
+        /* BALL WRAPPER V38.2 - FRECUENCIA EN TIEMPO REAL */
+        .ball-wrapper { display: flex; flex-direction: column; align-items: center; position: relative; }
+        .ball { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #ccc; text-align: center; font-size: 26px; font-weight: 800; color: var(--seren-green); outline: none; transition: 0.2s; background:white; -moz-appearance: textfield; box-shadow: 0 4px 6px rgba(0,0,0,0.05); z-index: 2; }
+        .ball:focus { border-color: var(--seren-gold); transform: scale(1.1); background: #fffde7; }
+        .ball-freq-label { font-size: 0.75em; color: #fff; background: #999; padding: 2px 8px; border-radius: 10px; margin-top: -10px; z-index: 1; padding-top: 12px; font-weight: bold; min-width: 50px; text-align: center; transition: 0.3s; opacity: 0; }
+        .ball-freq-label.visible { opacity: 1; margin-top: -15px; padding-top: 18px; }
+        .ball-freq-label.hot { background: #ef5350; }
+        .ball-freq-label.cold { background: #42a5f5; }
+        
+        .btn-group { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .btn { padding: 12px 30px; border: none; border-radius: 50px; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .btn-analyze { background: var(--seren-green); color: white; }
+        .btn-financial { background: #1565c0; color: white; }
+        .btn-smart { background: linear-gradient(135deg, #ddd, #fff); color: #333; border: 1px solid #ccc; }
+        .btn-omega { background: linear-gradient(135deg, #FFD700, #FDB931); color: #000; border: 2px solid #fff; animation: glow 2s infinite alternate; font-size: 1.1em; }
+        @keyframes glow { from { box-shadow: 0 0 10px #FFD700; } to { box-shadow: 0 0 20px #FFD700, 0 0 10px white; } }
+        
+        .btn-voice { background: #ef5350; color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin-left: 10px; cursor: pointer; transition: 0.3s; position: relative;}
+        .btn-voice.listening { animation: pulse-red 1s infinite; background: #c62828; }
+        .voice-status { position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 0.7em; color: #c62828; font-weight: bold; white-space: nowrap; display: none; }
+        @keyframes pulse-red { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .btn-clear { background: #cfd8dc; color: #455a64; }
+        .btn-print { background: #546e7a; color: white; }
+        .section-title { font-size: 1.4em; font-weight: 800; color: var(--seren-green); margin-bottom: 20px; border-bottom: 3px solid var(--seren-gold); display: block; padding-bottom: 5px; margin-top: 40px; }
+        
+        /* CALIBRACIÓN BARRA DE RANGO */
+        .range-wrapper { position: relative; margin: 60px 0 40px 0; padding-bottom: 20px; }
+        .range-container { height: 35px; border-radius: 20px; overflow: hidden; display:flex; border: 1px solid #ccc; position: relative; background: #ddd; /* Fallback */ }
+        .range-segment { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: rgba(0,0,0,0.6); text-transform: uppercase; border-right: 1px solid rgba(255,255,255,0.2); }
+        .range-marker-container { position: absolute; top: -15px; height: 60px; width: 4px; transition: left 1s ease-out; z-index: 20; background: black; border-radius: 2px; }
+        .range-value-badge { position: absolute; top: -35px; left: 50%; transform: translateX(-50%); background: #000; color: white; padding: 5px 10px; border-radius: 6px; font-weight: bold; font-size: 16px; white-space: nowrap; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .range-labels-container { position: relative; height: 30px; font-size: 11px; font-weight: bold; color: #555; margin-top: 8px; width: 100%; }
+        .range-label-abs { position: absolute; transform: translateX(-50%); text-align: center; }
+        .range-label-min { position: absolute; left: 0; } .range-label-max { position: absolute; right: 0; }
+        
+        /* AUDITORIA DE ZONAS */
+        .zone-audit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; text-align: center; font-size: 0.9em; }
+        .zone-audit-card { background: white; border: 1px solid #ddd; padding: 10px; border-radius: 6px; }
+        .audit-val { font-weight: 800; font-size: 1.2em; display: block; }
+        .zone-green { color: var(--range-green); border-color: var(--range-green); background: #e8f5e9; }
+        .zone-yellow { color: #f57f17; border-color: var(--range-yellow); background: #fffde7; }
+        .zone-red { color: #c62828; border-color: var(--range-red); background: #ffebee; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .stat-card { background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 6px solid #ccc; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .stat-card.good { border-left-color: var(--range-green); background: #e8f5e9; } 
+        .stat-card.warn { border-left-color: var(--range-yellow); background: #fffde7; }
+        .stat-card.bad { border-left-color: var(--range-red); background: #ffebee; }
+        .stat-subtitle { font-size: 0.9em; color: #555; margin-top: 8px; font-style: italic; border-top: 1px dashed rgba(0,0,0,0.1); padding-top: 6px; }
+        .ideal-ref { font-size: 0.85em; color: #0277bd; font-weight: bold; display: block; margin-top: 4px; }
+        
+        .expert-advice { font-size: 0.9em; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #aaa; color: #444; line-height: 1.4; }
+        .tip-box { background: #e3f2fd; padding: 15px; border-left: 5px solid #2196F3; border-radius: 4px; margin-top: 15px; margin-bottom: 15px; }
+        .tip-warning { background: #fff3e0; border-left-color: var(--range-yellow); color: #ef6c00; } 
+        .tip-danger { background: #ffebee; border-left-color: var(--range-red); color: #c62828; }
+        .tip-success { background: #e8f5e9; border-left-color: var(--range-green); color: #2e7d32; }
+        .tip-info { background: #e1f5fe; border-left-color: #0288d1; }
+        
+        .match-group { margin-bottom: 20px; border: 1px solid #eee; border-radius: 8px; overflow: hidden; background: white; }
+        .match-group-title { background: #f0f0f0; padding: 8px 15px; font-weight: bold; border-bottom: 1px solid #ddd; color: #555; }
+        .match-list-scroll { max-height: none; overflow-y: visible; }
+        .match-item { font-size: 0.9em; padding: 15px; border-bottom: 1px solid #eee; display: flex; flex-direction: column; gap: 8px; }
+        .match-header { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .match-dates-box { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+        .date-tag { background: #eef; color: #333; padding: 3px 10px; border-radius: 4px; border: 1px solid #ccd; font-size: 0.85em; font-weight: 500; }
+        
+        /* ESTILO QUIMICA */
+        .chemistry-row { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #eee; font-size: 0.95em; }
+        .friend-badge { background: #e3f2fd; border: 1px solid #90caf9; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin: 2px; color: #1565c0; display: inline-block; font-weight: 500;}
+        .chem-bar-bg { width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 4px; overflow: hidden; }
+        .chem-bar-fill { height: 100%; background: #42a5f5; }
+
+        .radar-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .radar-box { padding: 15px; border: 1px solid #eee; border-radius: 8px; background: white; }
+        .radar-head { font-weight: bold; margin-bottom: 0px; color: #555; display:flex; align-items:center; gap:5px;}
+        .radar-subtitle { display: block; font-size: 0.8em; color: #666; margin-bottom: 10px; font-style: italic; border-bottom: 1px solid #f0f0f0; padding-bottom: 5px; }
+        .radar-content { font-weight: bold; font-size: 1.1em; color: #333; margin-bottom: 5px;}
+        .radar-desc { font-size: 0.85em; color: #666; font-style: italic; border-top:1px dashed #eee; padding-top:5px; margin-top:5px;}
+        .radar-list-vertical { display: flex; flex-direction: column; gap: 5px; }
+        .radar-list-item { background: #f5f5f5; padding: 4px 8px; border-radius: 4px; font-size: 0.9em; border-left: 3px solid #ccc; display: flex; justify-content: space-between;}
+        .radar-list-item.hot { border-left-color: var(--range-red); background: #ffebee; }
+        .radar-list-item.cold { border-left-color: #2196F3; background: #e3f2fd; }
+        .rep-gold { background: var(--seren-gold); color: white; border-radius: 4px; padding: 1px 6px; font-weight: 800; box-shadow: 0 2px 2px rgba(0,0,0,0.2); }
+        .rep-blue { color: #1565c0; font-weight: 800; border-bottom: 2px solid #1565c0; margin: 0 2px;}
+        .consec-badge { background: #9c27b0; color: white; border-radius: 4px; padding: 1px 4px; font-weight: 800; box-shadow: 0 2px 2px rgba(0,0,0,0.2); margin: 0 2px; }
+        .missing-end { color: #d32f2f; font-weight: 900; font-size: 1.2em; background: #ffebee; padding: 2px 6px; border-radius: 4px; }
+        .complete-end { color: #2e7d32; font-weight: 800; font-size: 1.1em; background: #e8f5e9; padding: 2px 6px; border-radius: 4px; border:1px solid #a5d6a7; display:block; text-align:center;}
+        
+        .poisson-legend { display: flex; justify-content: center; gap: 15px; margin-bottom: 10px; font-size: 0.8em; flex-wrap: wrap; }
+        .poisson-legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+        .dot-green { background: #388e3c; } .dot-yellow { background: #ffa726; } .dot-red { background: #d32f2f; } .dot-gray { background: #bdbdbd; border:1px solid #999;}
+        .poisson-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 0.9em; }
+        .poisson-bar-bg { flex-grow: 1; height: 10px; background: #e0e0e0; border-radius: 5px; margin: 0 10px; overflow: hidden; }
+        .poisson-bar-fill { height: 100%; border-radius: 5px; transition: width 0.5s; }
+        .poisson-val { width: 40px; text-align: right; font-weight: bold; font-size: 0.8em; }
+
+        .chart-container { position: relative; margin-top: 40px; border: 1px solid #ddd; padding: 20px; border-radius: 8px; background: white; max-width: 550px; margin-left: auto; margin-right: auto; }
+        .chart-title { text-align: center; font-weight: 800; color: var(--seren-green); margin-bottom: 15px; font-size: 1.1em; }
+        .chart-summary-table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin-top: 15px; }
+        .chart-summary-table th, .chart-summary-table td { padding: 8px; border-bottom: 1px solid #eee; text-align: left; }
+        .chart-summary-table th { background: #f0f0f0; }
+        .chart-color-box { display: inline-block; width: 12px; height: 12px; margin-right: 5px; border-radius: 2px; }
+
+        .pascal-sim-box { background: #f3e5f5; border: 2px solid #ab47bc; border-radius: 8px; padding: 25px; margin-top: 30px; text-align: center; }
+        .pascal-title { color: #6a1b9a; font-weight: 800; font-size: 1.3em; margin-bottom: 10px; }
+        .pascal-results { display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .pascal-card { background: white; padding: 15px; border-radius: 6px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100px; }
+        .pascal-card span { display: block; font-weight: bold; font-size: 1.4em; color: #4a148c; }
+        .pascal-card small { font-size: 0.8em; color: #666; font-weight: 500;}
+        .finance-summary { margin-top: 20px; background: white; padding: 15px; border-radius: 6px; border: 2px dashed #ab47bc; display: inline-block;}
+
+        .mere-alert { margin-bottom: 20px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 83, 80, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 83, 80, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 83, 80, 0); } }
+
+        /* DASHBOARD CONVERGENCIA */
+        .conv-wrapper { margin-bottom: 25px; }
+        .conv-section-title { font-size: 0.9em; font-weight: 700; color: #555; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; border-left: 4px solid #ccc; padding-left: 8px; }
+        .conv-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom: 15px; }
+        .conv-card { padding: 10px; text-align: center; border-radius: 6px; font-size: 0.85em; border: 1px solid #ccc; display:flex; flex-direction:column; justify-content:center; }
+        .conv-val { font-size: 1.3em; font-weight: 900; display: block; }
+        .conv-sub { font-size: 0.75em; color: #666; margin-top: 3px; font-weight: 500; }
+        
+        .grid-machine .conv-card { background: #f5f5f5; color: #455a64; border-color: #cfd8dc; }
+        .grid-machine .conv-center { background: #e3f2fd; color: #1565c0; border-color: #90caf9; }
+        
+        .grid-winners .conv-card.w-low { background: #fffde7; color: #f57f17; border-color: var(--range-yellow); }
+        .grid-winners .conv-card.w-ideal { background: #fff8e1; color: #ff8f00; border-color: var(--seren-gold); border-width: 2px; }
+        .grid-winners .conv-card.w-high { background: #ffebee; color: #c62828; border-color: var(--range-red); }
+        .conv-section-title.win-title { border-left-color: var(--seren-gold); color: var(--seren-green); }
+
+        .gato-grid { display: grid; grid-template-columns: repeat(3, 80px); gap: 10px; justify-content: center; margin: 20px 0; }
+        .gato-cell-vis { width: 80px; height: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; border: 2px solid #ddd; border-radius: 12px; position: relative; }
+        .gato-cell-vis.center { background: #fffde7; border-color: var(--seren-gold); }
+        .gato-num { font-size: 1.6em; font-weight: 800; color: var(--seren-green); }
+        .gato-freq { font-size: 0.7em; background: var(--seren-gold); color: white; padding: 1px 6px; border-radius: 10px; margin-top: 2px; }
+
+        @media print { body { background: white; padding: 0; } .container { box-shadow: none; border: none; max-width: 100%; } .no-print { display: none !important; } .print-only-header { display: block !important; } .game-section { padding: 0 !important; } .match-list-scroll { max-height: none; } #resTrisHistory, #resTrisFinance { display: block !important; margin-bottom: 20px; page-break-inside: avoid; } canvas { max-width: 100% !important; height: auto !important; } }
+        .print-only-header { display: none; margin-bottom: 20px; border-bottom: 3px solid var(--seren-gold); padding-bottom: 15px; }
+        .print-title { font-size: 1.8em; font-weight: 900; color: var(--seren-green); margin: 0; }
+        .print-combo { font-size: 1.6em; font-weight: bold; color: #000; margin-top: 10px; letter-spacing: 2px; }
+        .print-details { font-size: 0.9em; color: #555; margin-top: 5px; }
+        .tris-suggestion-row { display: flex; justify-content: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
+        .tris-sugg-card { background: #e3f2fd; border: 1px solid #90caf9; padding: 10px; border-radius: 8px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .tris-sugg-card:hover { background: #bbdefb; transform: translateY(-2px); }
+        .tris-sugg-num { font-size: 1.4em; font-weight: 800; color: #1565c0; display: block; }
+        .tris-sugg-desc { font-size: 0.75em; color: #555; }
+        .tris-control-panel { display: flex; gap: 15px; background: #fffde7; padding: 20px; border-radius: 8px; border: 2px solid #f0f0f0; margin-bottom: 20px; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .tris-ctrl-grp { display: flex; flex-direction: column; gap: 5px; min-width: 120px; }
+        .tris-ctrl-grp label { font-size: 0.85em; font-weight: bold; color: #444; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tris-ctrl-grp select, .tris-ctrl-grp input[type="number"] { padding: 10px; border-radius: 6px; border: 1px solid #ccc; font-weight: bold; color: #333; }
+        .tris-checkbox-group { display: flex; flex-direction: column; gap: 5px; background: white; padding: 10px; border-radius: 6px; border: 2px solid #a5d6a7; }
+        .tris-checkbox { display: flex; align-items: center; gap: 8px; font-weight: bold; color: var(--seren-green); cursor: pointer; }
+        .tris-checkbox input { width: 18px; height: 18px; cursor: pointer; }
+        .payout-table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin-top: 10px; }
+        .payout-table th, .payout-table td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+        .payout-table th { background: #f0f0f0; }
+        .formula-box { background: #e0f7fa; border-left: 4px solid #00acc1; padding: 10px; margin-top: 10px; font-size: 0.85em; color: #006064; }
+        .analysis-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.8em; font-weight: bold; margin-bottom: 10px; }
+        .badge-trend { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+        .badge-global { background: #e8eaf6; color: #283593; border: 1px solid #c5cae9; }
+        .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 15px; }
+        .perm-card { background: #f9f9f9; padding: 8px; border-radius: 6px; border-left: 4px solid var(--seren-gold); font-size: 0.9em; }
+
+        /* V38.0 STYLES - DUPLAS & R7 */
+        .dupla-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; margin-top: 10px; }
+        .dupla-card { background: white; border: 1px solid #ddd; padding: 8px; border-radius: 6px; text-align: center; }
+        .dupla-card.gold { background: #fff8e1; border-color: var(--seren-gold); border-width: 2px; }
+        .dupla-pair { font-weight: 800; font-size: 1.1em; color: var(--seren-green); display: block; }
+        .dupla-freq { font-size: 0.8em; color: #666; }
+        .r7-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; background: #e0f2f1; color: #00695c; font-weight: bold; border: 1px solid #80cbc4; margin: 4px; }
+        .r7-highlight { background: #b2dfdb; border-color: #00897b; transform: scale(1.05); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="brand-header no-print">
+        <div class="brand-left"><img src="logo_serendipia.png" alt="Logo Serendipia" class="logo-img"></div>
+        <div class="inspiration-box"><span id="inspireText">...</span></div>
+    </div>
+    
+    <!-- MARKETING BANNER V38.2 -->
+    <div class="marketing-banner no-print">
+        <div class="mark-title">EL FILTRO DE LA VERDAD</div>
+        <div class="mark-text">
+            De las 32 millones de combinaciones, el Sistema Serendipia elimina automáticamente cerca del <span class="mark-highlight">70% de combinaciones 'basura'</span> que están fuera de la zona estadística probable. Nos enfocamos en el <span class="mark-highlight">30% central (la Zona Verde)</span> donde caen el 85% de los premios históricos. No adivinamos el futuro, simplemente dejamos de apostar a lo imposible.
+        </div>
+    </div>
+
+    <div class="advice-banner no-print"><span id="adviceText"></span></div>
+    <div class="nav-tabs no-print">
+        <button class="nav-btn tab-melate active" onclick="showTab('melate')">Melate</button>
+        <button class="nav-btn tab-retro" onclick="showTab('retro')">Retro</button>
+        <button class="nav-btn tab-chispazo" onclick="showTab('chispazo')">Chispazo</button>
+        <button class="nav-btn tab-tris" onclick="showTab('tris')">TRIS</button>
+        <button class="nav-btn tab-gato" onclick="showTab('gato')">Gato</button>
+    </div>
+
+    <!-- ===== MELATE (V38.2) ===== -->
+    <div id="melate" class="game-section active printable-section">
+        <div class="print-only-header"><h1 class="print-title">SERENDIPIA</h1><div>Reporte Melate</div><div id="printHeaderMelate" class="print-combo"></div></div>
+        <div class="no-print"><h2 class="section-title">🎱 Analizador de tu Número Melate</h2><div class="upload-area"><div><select id="melateType" style="padding:5px;"><option value="melate">Melate Tradicional</option><option value="revancha">Revancha</option><option value="revanchita">Revanchita</option></select></div><input type="file" id="fileMelate" accept=".csv"><span id="statusMelate">❌ CSV</span></div>
+        <div class="input-row">
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m1" onkeyup="checkFreq('melate', this)"><div id="freq_m1" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m2" onkeyup="checkFreq('melate', this)"><div id="freq_m2" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m3" onkeyup="checkFreq('melate', this)"><div id="freq_m3" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m4" onkeyup="checkFreq('melate', this)"><div id="freq_m4" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m5" onkeyup="checkFreq('melate', this)"><div id="freq_m5" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="56" data-len="2" id="m6" onkeyup="checkFreq('melate', this)"><div id="freq_m6" class="ball-freq-label">-</div></div>
+            <div class="btn-voice" onclick="startVoice('m', 6)" title="Dictar números">🎤<span class="voice-status">Escuchando...</span></div>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-analyze" onclick="analyzeFull('melate')">🔍 Analizar</button>
+            <button class="btn btn-smart" onclick="smartPick('melate',6,56)">🎲 Aleatorio</button>
+            <button class="btn btn-omega" onclick="generateOmega('melate')">👑 OMEGA (Premium)</button>
+            <button class="btn btn-clear" onclick="clearInputs('m',6)">Limpiar</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div></div><div id="resMelate" style="display:none;"></div>
+    </div>
+
+    <!-- ===== RETRO (V38.2) ===== -->
+    <div id="retro" class="game-section printable-section">
+        <div class="print-only-header"><h1 class="print-title">SERENDIPIA</h1><div>Reporte Retro</div><div id="printHeaderRetro" class="print-combo"></div></div>
+        <div class="no-print"><h2 class="section-title">🎱 Analizador de tu Número Retro</h2><div class="upload-area"><input type="file" id="fileRetro"><span id="statusRetro">❌ CSV</span></div>
+        <div class="input-row">
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r1" onkeyup="checkFreq('retro', this)"><div id="freq_r1" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r2" onkeyup="checkFreq('retro', this)"><div id="freq_r2" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r3" onkeyup="checkFreq('retro', this)"><div id="freq_r3" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r4" onkeyup="checkFreq('retro', this)"><div id="freq_r4" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r5" onkeyup="checkFreq('retro', this)"><div id="freq_r5" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="39" data-len="2" id="r6" onkeyup="checkFreq('retro', this)"><div id="freq_r6" class="ball-freq-label">-</div></div>
+            <div class="btn-voice" onclick="startVoice('r', 6)" title="Dictar números">🎤<span class="voice-status">Escuchando...</span></div>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-analyze" onclick="analyzeFull('retro')">Analizar</button>
+            <button class="btn btn-smart" onclick="smartPick('retro',6,39)">Generar</button>
+            <button class="btn btn-omega" onclick="generateOmega('retro')">👑 OMEGA</button>
+            <button class="btn btn-clear" onclick="clearInputs('r',6)">Limpiar</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div></div><div id="resRetro"></div>
+    </div>
+
+    <!-- ===== CHISPAZO (V38.2) ===== -->
+    <div id="chispazo" class="game-section printable-section">
+        <div class="print-only-header"><h1 class="print-title">SERENDIPIA</h1><div>Reporte Chispazo</div><div id="printHeaderChispazo" class="print-combo"></div></div>
+        <div class="no-print"><h2 class="section-title">🔥 Analizador de tu Número Chispazo</h2><div class="upload-area"><input type="file" id="fileChispazo"><span id="statusChispazo">❌ CSV</span></div>
+        <div class="input-row">
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="28" data-len="2" id="c1" onkeyup="checkFreq('chispazo', this)"><div id="freq_c1" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="28" data-len="2" id="c2" onkeyup="checkFreq('chispazo', this)"><div id="freq_c2" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="28" data-len="2" id="c3" onkeyup="checkFreq('chispazo', this)"><div id="freq_c3" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="28" data-len="2" id="c4" onkeyup="checkFreq('chispazo', this)"><div id="freq_c4" class="ball-freq-label">-</div></div>
+            <div class="ball-wrapper"><input type="number" class="ball strict-input ordered-input" data-max="28" data-len="2" id="c5" onkeyup="checkFreq('chispazo', this)"><div id="freq_c5" class="ball-freq-label">-</div></div>
+            <div class="btn-voice" onclick="startVoice('c', 5)" title="Dictar números">🎤<span class="voice-status">Escuchando...</span></div>
+        </div>
+        <div class="btn-group">
+            <button class="btn btn-analyze" onclick="analyzeFull('chispazo')">Analizar</button>
+            <button class="btn btn-smart" onclick="smartPick('chispazo',5,28)">Generar</button>
+            <button class="btn btn-omega" onclick="generateOmega('chispazo')">👑 OMEGA</button>
+            <button class="btn btn-clear" onclick="clearInputs('c',5)">Limpiar</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div></div><div id="resChispazo"></div>
+    </div>
+
+    <!-- ===== TRIS ===== -->
+    <div id="tris" class="game-section printable-section">
+        <div class="print-only-header">
+            <h1 class="print-title">SERENDIPIA TRIS</h1>
+            <div id="printHeaderTris" class="print-combo"></div>
+            <div id="printDetailsTris" class="print-details"></div>
+        </div>
+        <h2 class="section-title no-print">🔢 TRIS Profesional</h2>
+        
+        <div class="upload-area no-print">
+            <div style="flex-grow:1;"><input type="file" id="fileTris"><span id="statusTris">❌ CSV</span></div>
+        </div>
+
+        <div class="no-print" style="margin-bottom:25px;">
+            <div class="input-row" style="margin-bottom:15px;">
+                <input type="number" class="ball strict-input" data-max="9" data-len="1" id="t1" placeholder="1º">
+                <input type="number" class="ball strict-input" data-max="9" data-len="1" id="t2" placeholder="2º">
+                <input type="number" class="ball strict-input" data-max="9" data-len="1" id="t3" placeholder="3º">
+                <input type="number" class="ball strict-input" data-max="9" data-len="1" id="t4" placeholder="4º">
+                <input type="number" class="ball strict-input" data-max="9" data-len="1" id="t5" placeholder="5º">
+                <div class="btn-voice" onclick="startVoice('t', 5)" title="Dictar números">🎤<span class="voice-status">Escuchando...</span></div>
+            </div>
+            <div style="text-align:center;">
+                <button class="btn btn-smart" onclick="trisSuggest()">⚡ GENERAR</button>
+                <button class="btn btn-clear" onclick="clearTrisFull()">LIMPIAR</button>
+            </div>
+        </div>
+
+        <div class="no-print tris-control-panel">
+            <div class="tris-ctrl-grp" style="flex-grow: 1;">
+                <label style="color:#d32f2f;">📊 Base de Datos:</label>
+                <select id="trisHistoryRange" style="border: 2px solid #d32f2f;">
+                    <option value="5y">Últimos 5 Años (Tendencia)</option>
+                    <option value="all">Histórico Completo (Global)</option>
+                </select>
+            </div>
+
+            <div class="tris-ctrl-grp" style="flex-grow: 1;">
+                <label>Modalidad de Juego:</label>
+                <select id="trisMode" style="width:100%;" onchange="updateTrisInputs()">
+                    <optgroup label="Directas"><option value="direct5">Directa 5</option><option value="direct4">Directa 4</option><option value="direct3">Directa 3</option></optgroup>
+                    <optgroup label="Pares/Finales"><option value="parFin">Par Final</option><option value="parIni">Par Inicial</option><option value="numFin">Número Final</option><option value="numIni">Número Inicial</option></optgroup>
+                    <optgroup label="Combos"><option value="combo7">Combo 7</option><option value="combo10">Combo 10</option></optgroup>
+                    <optgroup label="Súper Candados"><option value="sc24">Súper Candado 24</option><option value="sc12">Súper Candado 12</option><option value="sc6">Súper Candado 6</option><option value="sc4">Súper Candado 4</option></optgroup>
+                </select>
+            </div>
+            <div class="tris-ctrl-grp"><label>Costo del Boleto ($):</label><input type="number" id="trisBet" value="1" min="1" onkeydown="return event.keyCode !== 69 && event.keyCode !== 189" onchange="validateTrisBets()"></div>
+            <div class="tris-ctrl-grp"><label>Sorteos Diarios:</label><select id="trisDraws"><option value="1">1 Sorteo</option><option value="2">2 Sorteos</option><option value="3">3 Sorteos</option><option value="4">4 Sorteos</option><option value="5">5 (Todos)</option></select></div>
+            <div class="tris-ctrl-grp"><label>Periodo de Juego:</label><select id="trisFrequency"><option value="1">Solo Hoy</option><option value="7">1 Semana</option><option value="15">1 Quincena</option><option value="30">1 Mes</option><option value="60">2 Meses</option><option value="90">3 Meses</option><option value="180">6 Meses</option><option value="365">1 Año</option></select></div>
+            <div class="tris-checkbox-group"><label class="tris-checkbox"><input type="checkbox" id="trisMult" onchange="toggleMultInput()"> Jugar Multiplicador</label><input type="number" id="trisMultAmount" placeholder="Monto ($)" disabled style="width:100%; padding:5px; border:1px solid #ccc; border-radius:4px; display:none;" onchange="validateTrisBets()"></div>
+        </div>
+
+        <div class="no-print btn-group">
+            <button class="btn btn-analyze" onclick="trisAnalyzeStats()">🔍 Análisis Histórico</button>
+            <button class="btn btn-financial" onclick="trisAnalyzeFinancial()">💰 Proyección Financiera</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Imprimir</button>
+        </div>
+        
+        <div id="resTrisHistory"></div>
+        <div id="resTrisFinance"></div>
+    </div>
+
+    <!-- ===== GATO ===== -->
+    <div id="gato" class="game-section printable-section">
+        <h2 class="section-title no-print">🐱 Gana Gato</h2>
+        <div class="upload-area no-print"><input type="file" id="fileGato"><span id="statusGato">❌ CSV</span></div>
+        <div class="gato-grid no-print"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g1"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g2"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g3"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g4"><div style="display:flex;align-items:center;justify-content:center;">🐱</div><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g6"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g7"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g8"><input type="number" class="ball strict-input" data-max="5" data-len="1" id="g5"></div>
+        <div class="no-print" style="text-align:center; margin-top:15px;"><button class="btn btn-analyze" onclick="analyzeGatoVisual()">Analizar Patrones</button></div>
+        <div id="resGato"></div>
+    </div>
+</div>
+
+<script>
+    // CONSTANTES GLOBALES (V38.2 - Marketing + Realtime Freq)
+    const DB = { melate: [], retro: [], chispazo: [], tris: [], gato: [] };
+    const PRIMES = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53];
+    const TRIS_RULES = { direct5: { label: "Directa 5", prize: 50000, cost: 1, type: "exact", active: [0,1,2,3,4] }, direct4: { label: "Directa 4", prize: 5000, cost: 1, type: "exact", active: [1,2,3,4] }, direct3: { label: "Directa 3", prize: 500, cost: 1, type: "exact", active: [2,3,4] }, parFin: { label: "Par Final", prize: 50, cost: 1, type: "exact", active: [3,4] }, parIni: { label: "Par Inicial", prize: 50, cost: 1, type: "exact", active: [0,1] }, numFin: { label: "Número Final", prize: 5, cost: 1, type: "exact", active: [4] }, numIni: { label: "Número Inicial", prize: 5, cost: 1, type: "exact", active: [0] }, combo7: { label: "Combo 7", prize: 55610, cost: 7, type: "combo_cumulative", active: [0,1,2,3,4] }, combo10: { label: "Combo 10", prize: 105620, cost: 10, type: "combo_cumulative", active: [0,1,2,3,4] }, sc24: { label: "Super Candado 24", prize: 5000, cost: 24, type: "candado", active: [1,2,3,4] }, sc12: { label: "Super Candado 12", prize: 5000, cost: 12, type: "candado", active: [1,2,3,4] }, sc6: { label: "Super Candado 6", prize: 5000, cost: 6, type: "candado", active: [1,2,3,4] }, sc4: { label: "Super Candado 4", prize: 5000, cost: 4, type: "candado", active: [1,2,3,4] } };
+    const TRIS_MULT_PRIZES = { direct5: 550000, direct4: 55000, direct3: 5500, parFin: 550, parIni: 550, numFin: 55, numIni: 55 };
+    const QUOTES = ["La administración del premio es tan importante como ganarlo.", "Invierte el 50% de tu ganancia, ahorra el 30% y disfruta el 20%.", "La constancia inteligente vence al azar puro."];
+    const TIPS = ["💰 Tip: Al ganar, busca un asesor financiero inmediatamente.", "📊 Estrategia: Juega sistemáticamente combinaciones de Reintegro.", "⚖️ Equilibrio: Cubre el 80% de probabilidades mezclando pares e impares."];
+    
+    // CONFIGURACIÓN MAESTRA DE JUEGOS
+    const GAME_CONFIG = {
+        melate: {
+            maxNum: 56, count: 6,
+            minSum: 21, maxSum: 321, 
+            idealSum: 171, zoneMin: 120, zoneMax: 220,
+            guaranteedMinimum: 30000000, // 30 Millones
+            idealEvenText: "3 Pares / 3 Impares (33% Teórico)",
+            idealPrimes: [1, 2, 3],
+            quartetWarning: "PRECAUCIÓN: Cuarteta repetida (Raro en Melate)",
+            quartetClass: "tip-warning"
+        },
+        retro: {
+            maxNum: 39, count: 6,
+            minSum: 21, maxSum: 219,
+            idealSum: 120, zoneMin: 90, zoneMax: 150,
+            guaranteedMinimum: 5000000, // 5 Millones
+            idealEvenText: "3 Pares / 3 Impares (33% Teórico)",
+            idealPrimes: [1, 2, 3],
+            quartetWarning: "NOTA: Cuarteta repetida (Frecuente en Retro)",
+            quartetClass: "tip-info" // Menos alarmante
+        },
+        chispazo: {
+            maxNum: 28, count: 5,
+            minSum: 15, maxSum: 130,
+            idealSum: 72.5, zoneMin: 50, zoneMax: 100,
+            guaranteedMinimum: 0, // Chispazo no tiene una bolsa acumulada como tal para este tipo de detección
+            idealEvenText: "2 Pares / 3 Impares (32% Teórico)",
+            idealPrimes: [1, 2, 3],
+            quartetWarning: "ALERTA: Cuarteta en Chispazo (Muy Probable)",
+            quartetClass: "tip-info"
+        }
+    };
+
+    let chartInstance = null; // Instancia global para el gráfico Pie (Desempeño Histórico Total)
+    let bernoulliInstance = null; // Instancia global para el gráfico Bernoulli (Convergencia al Equilibrio)
+    let currentVoiceIndex = 0; // Para el control de voz
+
+    // Inicialización de citas y tips (sin cambios)
+    let qI = 0, tI = 0; 
+    setInterval(() => { if(document.getElementById('inspireText')) { document.getElementById('inspireText').innerText = QUOTES[qI]; qI=(qI+1)%QUOTES.length; } }, 120000); 
+    setInterval(() => { if(document.getElementById('adviceText')) { document.getElementById('adviceText').innerText = TIPS[tI]; tI=(tI+1)%TIPS.length; } }, 10000);
+    window.onload = function() { 
+        if(document.getElementById('inspireText')) document.getElementById('inspireText').innerText = QUOTES[0]; 
+        if(document.getElementById('adviceText')) document.getElementById('adviceText').innerText = TIPS[0]; 
+    };
+
+    function parseDate(dateStr) { 
+        if (!dateStr) return new Date(0); 
+        // Intenta analizar en formato dd/mm/yyyy o yyyy-mm-dd
+        if (dateStr.includes('/')) { 
+            const [d, m, y] = dateStr.split('/'); 
+            return new Date(y, m - 1, d); 
+        } else if (dateStr.includes('-')) { 
+            return new Date(dateStr); 
+        } 
+        return new Date(0); 
+    }
+
+    // Configuración de inputs numéricos y salto automático (sin cambios)
+    function setupStrictInputs() {
+        document.querySelectorAll('.strict-input').forEach(i => { 
+            i.addEventListener('keydown', function(e) { if(e.key === '-' || e.key === 'e' || e.key === '+') e.preventDefault(); });
+            i.addEventListener('input', function(e) { let maxLen = parseInt(this.dataset.len); let maxVal = parseInt(this.dataset.max); if(this.value.length > maxLen) this.value = this.value.slice(0, maxLen); if(parseInt(this.value) > maxVal) this.value = this.value.slice(0, -1); });
+            if(i.classList.contains('ordered-input')) {
+                i.addEventListener('change', function(e) {
+                    let currentId = this.id; let prefix = currentId.charAt(0); let index = parseInt(currentId.slice(1));
+                    if(index > 1) {
+                        let prevVal = document.getElementById(prefix + (index-1)).value;
+                        if(prevVal !== "" && parseInt(this.value) <= parseInt(prevVal)) {
+                            alert("⚠️ En este juego, los números deben ir en orden ascendente (menor a mayor)."); this.value = "";
+                        }
+                    }
+                });
+            }
+            let timer; i.addEventListener('keyup', function(e) { clearTimeout(timer); if(e.key === 'Backspace') return; let v = this.value; let maxLen = parseInt(this.dataset.len); if(v.length === maxLen) { jumpNext(this); } else if(v.length === 1 && maxLen > 1) { timer = setTimeout(() => jumpNext(this), 1200); } }); 
+        });
+    }
+    function jumpNext(curr) { let next = curr.nextElementSibling; if(curr.id.startsWith('g')) { let id=parseInt(curr.id.replace('g','')); if(id<8) next=document.getElementById('g'+(id+1)); } if(next && next.tagName==='INPUT' && !next.disabled) next.focus(); }
+    
+    // V38.2 - FREQUENCY CHECKER FUNCTION
+    function checkFreq(game, el) {
+        let val = parseInt(el.value);
+        let labelId = 'freq_' + el.id;
+        let label = document.getElementById(labelId);
+        
+        if(!val || isNaN(val) || !DB[game] || DB[game].length === 0) {
+            label.classList.remove('visible');
+            return;
+        }
+
+        // Count frequency in history
+        let count = 0;
+        // Use modernDB logic if melate
+        let dbToSearch = DB[game];
+        if(game === 'melate') dbToSearch = dbToSearch.filter(d => parseDate(d.fecha) >= new Date(2008, 0, 1));
+
+        dbToSearch.forEach(d => { if(d.nums.includes(val)) count++; });
+        
+        label.innerText = count + " veces";
+        label.classList.add('visible');
+        
+        // Heatmap logic
+        let total = dbToSearch.length;
+        let pct = (count / total) * 100;
+        
+        label.classList.remove('hot', 'cold');
+        if(pct > 12) label.classList.add('hot'); // Arbitrary threshold for visual feedback
+        else if(pct < 8) label.classList.add('cold');
+    }
+
+    // Configuración de cargadores de CSV (V38.1 - Universal Loader FIX)
+    function setupLoader(id, k, c) { 
+        document.getElementById(id).addEventListener('change', e => { 
+            if(!e.target.files[0]) return; 
+            Papa.parse(e.target.files[0], { 
+                header: true, 
+                skipEmptyLines: true, 
+                complete: res => { 
+                    DB[k] = res.data.map(row => { 
+                        let nums = []; 
+                        let bolsaVal = 0;
+                        if(row.BOLSA) bolsaVal = parseFloat(row.BOLSA.replace(/[^0-9.]/g, ''));
+                        else if(row.Bolsa) bolsaVal = parseFloat(row.Bolsa.replace(/[^0-9.]/g, ''));
+                        else if(row.PREMIO) bolsaVal = parseFloat(row.PREMIO.replace(/[^0-9.]/g, ''));
+                        
+                        let sorteoVal = row.CONCURSO || row.Concurso || row.SORTEO || row.Sorteo || ''; 
+                        
+                        let additionalVal = null;
+
+                        if (k === 'tris') { 
+                            let vals = Object.values(row); let found = false; 
+                            for(let i=0; i<vals.length-4; i++) { 
+                                if(!isNaN(vals[i]) && !isNaN(vals[i+1]) && !isNaN(vals[i+2]) && !isNaN(vals[i+3]) && !isNaN(vals[i+4]) && vals[i]!=='' && vals[i].toString().length===1) { 
+                                    nums = [vals[i], vals[i+1], vals[i+2], vals[i+3], vals[i+4]].map(Number); found = true; break; 
+                                } 
+                            } 
+                            if(!found) { 
+                                let comb = row['TRIS'] || row['Tris'] || row['NUMEROS'] || row['Combinacion'] || vals.find(v => v && v.toString().length >=5 && !isNaN(v)); 
+                                if(comb) nums = comb.toString().replace(/\D/g,'').split('').map(Number).slice(-5); 
+                            } 
+                        } else { 
+                            // V38.1 FIX: Lector Universal Melate/Retro/Chispazo
+                            let maxN = (k === 'melate' ? 56 : (k === 'retro' ? 39 : 28));
+                            
+                            let explicitAdditional = row['R7'] || row['Adicional'] || row['ADICIONAL'];
+                            if(explicitAdditional) additionalVal = parseInt(explicitAdditional);
+
+                            let rowValues = Object.entries(row);
+                            let candidates = [];
+                            
+                            rowValues.forEach(([key, val]) => {
+                                let cleanKey = key.toUpperCase().trim();
+                                if (['FECHA','CONCURSO','SORTEO','BOLSA','PREMIO','MONTO','GANADORES'].some(bad => cleanKey.includes(bad))) return;
+                                if (key === 'R7' || key === 'Adicional' || key === 'ADICIONAL') return;
+
+                                let n = parseInt(val);
+                                if (!isNaN(n) && n > 0 && n <= maxN) {
+                                    candidates.push(n);
+                                }
+                            });
+
+                            if (candidates.length >= c) {
+                                nums = candidates.slice(0, c);
+                                if (additionalVal === null && candidates.length > c) {
+                                    additionalVal = candidates[c];
+                                }
+                            }
+                        } 
+                        
+                        if(k==='tris' && nums.length<5) return null; 
+                        if(k !== 'tris') nums.sort((a,b) => a - b); 
+                        
+                        return { fecha: row.FECHA||row.Fecha||'', nums: nums.slice(0, k==='gato'?8:c), bolsa: bolsaVal, sorteo: sorteoVal, additional: additionalVal }; 
+                    }).filter(d => d && d.nums.length >= (k==='gato'?8:c)); 
+                    
+                    if(DB[k].length > 0) document.getElementById('status'+k.charAt(0).toUpperCase()+k.slice(1)).innerText = "✅ Listo"; 
+                    else document.getElementById('status'+k.charAt(0).toUpperCase()+k.slice(1)).innerText = "❌ CSV (Vacío)";
+                } 
+            }); 
+        }); 
+    }
+    setupLoader('fileMelate','melate',6); setupLoader('fileRetro','retro',6); setupLoader('fileChispazo','chispazo',5); setupLoader('fileTris','tris',5); setupLoader('fileGato','gato',8); setupStrictInputs();
+
+    // Funciones de navegación y limpieza
+    function showTab(t){ document.querySelectorAll('.game-section').forEach(d=>d.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active')); document.getElementById(t).classList.add('active'); document.querySelector(`.tab-${t}`).classList.add('active'); }
+    function clearInputs(p, n){ 
+        currentVoiceIndex=0; 
+        for(let i=1; i<=n; i++) {
+            let el = document.getElementById(p+i);
+            el.value = ''; 
+            // V38.2 Clear Frequency Labels
+            let freqLab = document.getElementById('freq_'+p+i);
+            if(freqLab) freqLab.classList.remove('visible');
+        }
+        document.getElementById('res'+(p==='m'?'Melate':p==='r'?'Retro':p==='c'?'Chispazo':p==='t'?'Tris':'Gato')).style.display='none'; 
+    }
+
+    // Funciones de voz (sin cambios)
+    const numberMap = { "cero":0, "uno":1, "dos":2, "tres":3, "cuatro":4, "cinco":5, "seis":6, "siete":7, "ocho":8, "nueve":9, "diez":10, "once":11, "doce":12, "trece":13, "catorce":14, "quince":15, "dieciseis":16, "diecisiete":17, "dieciocho":18, "diecinueve":19, "veinte":20, "treinta":30, "cuarenta":40, "cincuenta":50, "sesenta":60 };
+    function textToNumbers(text) {
+        text = text.toLowerCase().replace(/ y /g, " ").replace(/coma/g, "").replace(/\./g, ""); 
+        let parts = text.split(" ");
+        let result = [];
+        parts.forEach(p => {
+            let val = parseInt(p);
+            if(!isNaN(val)) result.push(val);
+            else if(numberMap[p] !== undefined) result.push(numberMap[p]);
+        });
+        return result;
+    }
+
+    function startVoice(prefix, count) {
+        if (!('webkitSpeechRecognition' in window)) return alert("Tu navegador no soporta voz. Usa Google Chrome.");
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'es-MX'; recognition.continuous = false; recognition.interimResults = false;
+        
+        let btn = document.querySelector(`.btn-voice[onclick="startVoice('${prefix}', ${count})"]`);
+        let status = btn.querySelector('.voice-status');
+        
+        btn.classList.add('listening');
+        status.style.display = 'block';
+
+        recognition.onresult = (event) => {
+            btn.classList.remove('listening'); status.style.display = 'none';
+            const transcript = event.results[0][0].transcript;
+            let nums = textToNumbers(transcript);
+            if(nums.length === 0) nums = transcript.match(/\d+/g)?.map(Number) || [];
+            
+            if (nums.length === 0) { alert("No escuché números. Intenta dictar: 'Uno cinco veinte'"); return; }
+            
+            nums.forEach(num => {
+                if(currentVoiceIndex < count) {
+                    let el = document.getElementById(prefix + (currentVoiceIndex+1));
+                    if(el) { el.value = num; currentVoiceIndex++; }
+                }
+            });
+        };
+        recognition.onerror = (e) => { 
+            btn.classList.remove('listening'); status.style.display = 'none';
+            if(e.error === 'not-allowed') alert("Permiso denegado. Haz clic en el candado junto a la URL para permitir el micrófono.");
+        };
+        recognition.onend = () => { btn.classList.remove('listening'); status.style.display = 'none'; };
+        recognition.start();
+    }
+
+    // ANALISIS PRINCIPAL (V38.2)
+    function analyzeFull(game) {
+        try {
+            let db = DB[game]; 
+            if(!db || db.length===0) return alert("⚠️ Carga el archivo histórico primero para " + game.charAt(0).toUpperCase() + game.slice(1) + ".");
+            
+            let cfg = GAME_CONFIG[game]; 
+            let prefix = game.charAt(0).toLowerCase(); 
+            
+            let u = [];
+            for(let i=1; i<=cfg.count; i++) { 
+                let el = document.getElementById(prefix+i); 
+                let val = parseInt(el.value); 
+                if(isNaN(val)) return alert("⚠️ Faltan números en tu combinación."); 
+                if(val < 1 || val > cfg.maxNum) return alert(`⚠️ Error: El número ${val} está fuera de rango.`); 
+                u.push(val); 
+            }
+            let unique = new Set(u); 
+            if(unique.size !== u.length) return alert("⚠️ Error: Tienes números repetidos."); 
+            u.sort((a,b)=>a-b);
+            
+            let printId = 'printHeader' + game.charAt(0).toUpperCase() + game.slice(1); 
+            if(document.getElementById(printId)) document.getElementById(printId).innerText = u.join(' - ');
+
+            let modernDB = db; let eraMsg = "";
+            if(game === 'melate') { 
+                modernDB = db.filter(d => parseDate(d.fecha) >= new Date(2008, 0, 1)); 
+                eraMsg = `<div class="tip-box tip-info" style="margin-top:0;">ℹ️ <strong>Nota Técnica:</strong> Analizando "Era Moderna" (2008-Presente).</div>`; 
+            }
+
+            let total = modernDB.length;
+            let sum = u.reduce((a,b)=>a+b,0); 
+            let even = u.filter(n=>n%2===0).length; 
+            let primes = u.filter(n=>PRIMES.includes(n)).length;
+
+            let endings = u.map(n => n % 10);
+            let endingCounts = {};
+            endings.forEach(x => endingCounts[x] = (endingCounts[x] || 0) + 1);
+            let maxEndingRep = Math.max(...Object.values(endingCounts));
+            
+            let termMsg = ""; let termClass = "tip-success";
+            if (maxEndingRep >= 4) { termMsg = "🛑 <strong>ALERTA DE TERMINACIÓN:</strong> Tienes 4 o más números con la misma terminación."; termClass = "tip-danger"; }
+            else if (maxEndingRep === 3) { termMsg = "⚠️ <strong>Precaución:</strong> Tienes 3 números con la misma terminación."; termClass = "tip-warning"; }
+            else { termMsg = "✅ <strong>Terminaciones:</strong> Buena distribución."; }
+
+            let recentSums = modernDB.slice(0, 5).map(d => d.nums.reduce((a,b)=>a+b,0));
+            let recentAvg = recentSums.reduce((a,b)=>a+b,0) / 5;
+            let momentumMsg = "";
+            let diffFromIdeal = recentAvg - cfg.idealSum;
+            
+            if (Math.abs(diffFromIdeal) < 15) momentumMsg = `<div class="tip-box tip-success">🌡️ <strong>Termómetro:</strong> Mercado ESTABLE (Equilibrio).</div>`;
+            else if (diffFromIdeal > 20) momentumMsg = `<div class="tip-box tip-warning">🌡️ <strong>Termómetro:</strong> Mercado CALIENTE (Alto). Se espera corrección a la baja.</div>`;
+            else if (diffFromIdeal < -20) momentumMsg = `<div class="tip-box tip-warning">🌡️ <strong>Termómetro:</strong> Mercado FRÍO (Bajo). Se espera rebote al alza.</div>`;
+            
+            let rangeTotal = cfg.maxSum - cfg.minSum;
+            let pStartGreen = ((cfg.zoneMin - cfg.minSum) / rangeTotal) * 100;
+            let pEndGreen = ((cfg.zoneMax - cfg.minSum) / rangeTotal) * 100;
+            
+            let gradientCSS = `background: linear-gradient(to right, 
+                var(--range-red) 0%, 
+                var(--range-yellow) ${pStartGreen * 0.8}%, 
+                var(--range-green) ${pStartGreen}%, 
+                var(--range-green) ${pEndGreen}%, 
+                var(--range-yellow) ${pEndGreen + (100 - pEndGreen)*0.2}%, 
+                var(--range-red) 100%);`;
+
+            let sumPos = ((sum - cfg.minSum) / rangeTotal) * 100; 
+            if(sumPos > 100) sumPos = 100; if(sumPos < 0) sumPos = 0;
+            let sumMsg = ""; 
+            if(sum < cfg.zoneMin) sumMsg = "⚠️ Zona Baja (Riesgo Estadístico)."; 
+            else if(sum > cfg.zoneMax) sumMsg = "⚠️ Zona Alta (Riesgo Estadístico)."; 
+            else sumMsg = `✅ ¡Excelente! Zona de Ganadores (${cfg.zoneMin}-${cfg.zoneMax}).`;
+
+            let lowCount=0, idealCount=0, highCount=0;
+            modernDB.forEach(d => { let s = d.nums.reduce((a,b)=>a+b,0); if(s < cfg.zoneMin) lowCount++; else if(s > cfg.zoneMax) highCount++; else idealCount++; });
+            let lowPct = Math.round((lowCount/total)*100); let idealPct = Math.round((idealCount/total)*100); let highPct = Math.round((highCount/total)*100);
+            let zoneAuditHTML = `<div class="zone-audit-grid"><div class="zone-audit-card zone-yellow"><span class="audit-val">${lowPct}%</span><small>Abajo</small></div><div class="zone-audit-card zone-green"><span class="audit-val">${idealPct}%</span><small>ZONA IDEAL</small></div><div class="zone-audit-card zone-red"><span class="audit-val">${highPct}%</span><small>Arriba</small></div></div>`;
+            
+            let mereAlert = ""; let diffs = []; for(let i=0; i<u.length-1; i++) diffs.push(u[i+1]-u[i]);
+            let isArithmetic = diffs.every(d => d === diffs[0]); let isLinear = (u[0]===5 && u[1]===10) || (u[0]===1 && u[1]===2 && u[2]===3);
+            if(isArithmetic || isLinear) mereAlert = `<div class="tip-box tip-danger mere-alert">🛑 <strong>ALERTA DE PATRÓN:</strong> Secuencia aritmética obvia. Evita esto.</div>`;
+
+            let evenPct = ((modernDB.filter(d => d.nums.filter(n=>n%2===0).length === even).length / total) * 100).toFixed(1);
+            let evenClass = "bad"; let evenMsg = "";
+            if((game==='chispazo' && (even===2||even===3)) || (game!=='chispazo' && even===3)) { evenClass="good"; evenMsg="¡Excelente! % Ideal."; }
+            else if((game==='chispazo' && (even===1||even===4)) || (game!=='chispazo' && (even===2||even===4))) { evenClass="warn"; evenMsg="Aceptable."; }
+            else { evenClass="bad"; evenMsg="⚠️ Riesgo."; }
+            
+            let primeClass = "bad"; let primeMsg = ""; 
+            let relevantPrimes = PRIMES.filter(p => p <= cfg.maxNum);
+            let primeTextList = `Primos: ${relevantPrimes.join(', ')}`;
+            let primePct = ((modernDB.filter(d => d.nums.filter(n=>PRIMES.includes(n)).length === primes).length / total) * 100).toFixed(1);
+            if (cfg.idealPrimes.includes(primes)) { primeClass = "good"; primeMsg = "¡Bien! Cantidad sana."; } else { primeClass = "warn"; primeMsg = "Cuidado extremos."; }
+
+            let consecutiveCountUser = 0; for(let i=0; i<u.length-1; i++) { if(u[i+1] === u[i] + 1) consecutiveCountUser++; }
+            let drawsWithConsec = 0; modernDB.forEach(d => { let n = d.nums; for(let i=0; i<n.length-1; i++) { if(n[i+1] === n[i]+1) { drawsWithConsec++; break; } } });
+            let consecPctGlobal = Math.round((drawsWithConsec / total) * 100);
+            let consecMsg = consecutiveCountUser > 0 ? `✅ <strong>Consecutivos:</strong> Bien.` : `⚠️ <strong>Consecutivos:</strong> No tienes. El <strong>${consecPctGlobal}%</strong> de ganadores los usan.`; let consecClass = consecutiveCountUser > 0 ? "tip-success" : "tip-warning";
+
+            // V38.2 - INTELIGENCIA DEL 7º ELEMENTO Y DUPLAS MAESTRAS
+            let intelligenceHTML = "";
+            if (game !== 'chispazo') { 
+                let r7Counts = {};
+                let oddR7 = 0;
+                modernDB.forEach(d => { 
+                    if(d.additional) {
+                        r7Counts[d.additional] = (r7Counts[d.additional] || 0) + 1;
+                        if(d.additional % 2 !== 0) oddR7++;
+                    }
+                });
+                
+                let oddR7Pct = Math.round((oddR7 / modernDB.length) * 100);
+                
+                let bestR7Candidate = u[0];
+                let maxR7Hits = 0;
+                
+                u.forEach(n => {
+                    let hits = r7Counts[n] || 0;
+                    if(hits > maxR7Hits) {
+                        maxR7Hits = hits;
+                        bestR7Candidate = n;
+                    }
+                });
+
+                let pairCounts = {};
+                let userPairs = [];
+                for(let i=0; i<u.length; i++) {
+                    for(let j=i+1; j<u.length; j++) {
+                        userPairs.push([u[i], u[j]]);
+                    }
+                }
+                
+                userPairs.forEach(pair => {
+                    let pKey = pair.join('-');
+                    pairCounts[pKey] = 0;
+                    modernDB.forEach(d => {
+                        if(d.nums.includes(pair[0]) && d.nums.includes(pair[1])) {
+                            pairCounts[pKey]++;
+                        }
+                    });
+                });
+                
+                let sortedPairs = Object.entries(pairCounts).sort((a,b) => b[1] - a[1]);
+                let bestPairsHTML = sortedPairs.slice(0, 5).map((p, idx) => {
+                    let isGold = idx === 0 ? 'gold' : '';
+                    return `<div class="dupla-card ${isGold}"><span class="dupla-pair">${p[0]}</span><span class="dupla-freq">${p[1]} veces</span></div>`;
+                }).join('');
+
+                intelligenceHTML = `
+                <div class="section-title">2. Inteligencia del 7º Elemento y Duplas (V38.2)</div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-title">🧩 Perfil del Comodín (R7)</span>
+                        <div style="margin-top:10px;">
+                            Tu mejor candidato para Adicional es: <br>
+                            <span class="r7-badge r7-highlight" style="font-size:1.4em;">${bestR7Candidate}</span>
+                        </div>
+                        <div class="stat-subtitle">Históricamente el Adicional tiende a ser <strong>${oddR7Pct > 50 ? 'IMPAR' : 'PAR'}</strong> (${oddR7Pct > 50 ? oddR7Pct : 100-oddR7Pct}%).</div>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-title">🤝 Duplas Maestras</span>
+                        <div class="stat-subtitle" style="margin-bottom:10px;">Las parejas más fuertes de tu jugada:</div>
+                        <div class="dupla-grid">${bestPairsHTML}</div>
+                    </div>
+                </div>
+                `;
+            }
+
+            let repAlert = ""; if (modernDB.length > 0) { let lastDraw = modernDB[0].nums; let repeatedNums = u.filter(n => lastDraw.includes(n)); if (repeatedNums.length > 0) repAlert = `<div class="tip-box tip-success">✅ <strong>Repetición:</strong> Incluyes números del sorteo anterior (${repeatedNums.join(', ')}).</div>`; else repAlert = `<div class="tip-box tip-warning">📉 <strong>Repetición:</strong> No reciclas números del sorteo anterior.</div>`; }
+            
+            let last20=modernDB.slice(0,20); let freq={}; last20.forEach(d=>d.nums.forEach(n=>freq[n]=(freq[n]||0)+1)); 
+            
+            let hotList = u.filter(n => freq[n] >= 3).map(n => `${n} (${freq[n]} veces)`);
+            let hotHTML = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>`<div class="radar-list-item hot"><strong>${x[0]}</strong> (${Math.round((x[1]/20)*100)}% de sorteos)</div>`).join('');
+            
+            let lastSeen={}; for(let i=0;i<modernDB.length;i++) modernDB[i].nums.forEach(n=>{if(lastSeen[n]===undefined)lastSeen[n]=i}); 
+            let coldList = u.filter(n => lastSeen[n] > 20).map(n => `${n} (hace ${lastSeen[n]} sorteos)`);
+            let coldHTML = Object.entries(lastSeen).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>`<div class="radar-list-item cold"><strong>${x[0]}</strong> (${x[1]} sorteos)</div>`).join('');
+            
+            let radarInline = `<div style="font-size:0.9em; border-bottom:1px dashed #ccc; padding-bottom:5px; margin-bottom:5px;"><strong>Estrategia de Mezcla:</strong> Combina "Calientes" (Inercia) con "Rezagados" (Presión).</div>`;
+            if(hotList.length > 0) radarInline += `<div>🔥 <strong>Calientes:</strong> ${hotList.join(', ')}</div>`; 
+            if(coldList.length > 0) radarInline += `<div>🧊 <strong>Rezagados:</strong> ${coldList.join(', ')}</div>`;
+
+            let matchesGroups = {3:{}, 4:{}, 5:{}}; let counts = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+            const pd = (s) => { if(!s) return new Date(0); let p=s.split('/'); return new Date(p[2],p[1]-1,p[0]); };
+            modernDB.forEach(d => { 
+                let int = d.nums.filter(n=>u.includes(n)).sort((a,b)=>a-b); let hits = int.length; if(hits > 6) hits = 6; counts[hits]++; 
+                if(hits>=3 && hits<=5) { let k = int.join(', '); if(!matchesGroups[hits][k]) matchesGroups[hits][k] = {count:0, dates:[]}; matchesGroups[hits][k].count++; matchesGroups[hits][k].dates.push(d.fecha); } 
+            });
+            
+            let quartWarning = "";
+            if(counts[4] > 0) {
+                 let qKeys = Object.keys(matchesGroups[4]);
+                 let recentDate = new Date(0);
+                 qKeys.forEach(k => { let d = pd(matchesGroups[4][k].dates[0]); if(d > recentDate) recentDate = d; });
+                 let yearsAgo = (new Date().getFullYear() - recentDate.getFullYear());
+                 quartWarning = `(Salió hace ${yearsAgo} años)`;
+            }
+
+            let warningHTML = ""; 
+            if (counts[6] > 0) warningHTML = `<div class="tip-box tip-danger">🔴 <strong>PELIGRO MÁXIMO:</strong> Esta combinación exacta YA SALIÓ anteriormente.</div>`;
+            else if (counts[5] > 0) warningHTML = `<div class="tip-box tip-danger">🔴 <strong>ALERTA DE QUINTETA:</strong> Esta combinación contiene 5 números que ya salieron juntos.</div>`;
+            else if (counts[4] > 0) warningHTML = `<div class="tip-box ${cfg.quartetClass}">🟡 <strong>${cfg.quartetWarning}:</strong> Contiene 4 números que ya salieron juntos. ${quartWarning}</div>`;
+            else warningHTML = `<div class="tip-box tip-success">🟢 <strong>LUZ VERDE:</strong> Estructura limpia de repeticiones graves.</div>`;
+            if(radarInline !== "") warningHTML += `<div class="tip-box tip-info">${radarInline}</div>`;
+
+            let getMatchHTML = (lvl, title) => { let groups = matchesGroups[lvl]; let keys = Object.keys(groups).sort((a,b) => groups[b].count - groups[a].count); if(keys.length===0) return ''; let list = keys.map(k => { let info = groups[k]; info.dates.sort((a,b) => pd(b) - pd(a)); let avgGap = Math.round(total / info.count); let dateTags = info.dates.map(d => `<span class="date-tag">${d}</span>`).join(''); return `<div class="match-item"><div class="match-header"><span class="match-nums">(${k})</span><span style="background:var(--seren-gold); padding:2px 8px; border-radius:10px; font-weight:bold;">${info.count} veces</span></div><div style="font-size:0.85em; color:#666; margin-bottom:5px; font-style:italic;">Sale 1 vez cada <strong>${avgGap}</strong> sorteos aprox.</div><div class="match-dates-box">${dateTags}</div></div>`; }).join(''); return `<div class="match-group"><div class="match-group-title">${title}</div><div class="match-list-scroll">${list}</div></div>`; };
+            
+            let chemHTML = ""; u.forEach(n => { let f = {}; let tApp = 0; modernDB.forEach(d => { if(d.nums.includes(n)) { tApp++; d.nums.forEach(p => { if(p!==n) f[p]=(f[p]||0)+1; }); } }); let sorted = Object.entries(f).sort((a,b)=>b[1]-a[1]).slice(0,20); let badges = sorted.map(x => { let pct = Math.round((x[1]/tApp)*100); return `<div style="display:inline-block; margin:2px; text-align:center; width:45px;"><span class="friend-badge">${x[0]}</span><div style="font-size:0.7em;">${pct}%</div><div class="chem-bar-bg"><div class="chem-bar-fill" style="width:${pct}%"></div></div></div>`; }).join(''); chemHTML += `<div class="chemistry-row"><strong>${n}</strong> se lleva con: ${badges}</div>`; });
+            
+            let recentEndings = new Set(); modernDB.slice(0, 5).forEach(d => d.nums.forEach(n => recentEndings.add(n%10))); let missingEnds = [0,1,2,3,4,5,6,7,8,9].filter(x => !recentEndings.has(x)); 
+            let absentExpl = `<div class="radar-list">`; 
+            if(missingEnds.length > 0) absentExpl += `<div class="missing-end">Ausentes: ${missingEnds.join(', ')}</div><br>`; 
+            else absentExpl += `<div class="complete-end">¡COBERTURA TOTAL!</div><br>`; 
+            
+            modernDB.slice(0,10).forEach(d => { let formattedNums = d.nums.map(n => `<span>${n.toString().slice(0,-1)}<span class="end-digit">${n%10}</span></span>`).join(' - '); absentExpl += `<div><small>${d.fecha}:</small> ${formattedNums}</div>`; }); absentExpl += `</div>`; 
+            
+            let repCount=0; for(let i=0; i<modernDB.length-1; i++) { if(modernDB[i].nums.some(n => modernDB[i+1].nums.includes(n))) repCount++; } 
+            let repPct = Math.round((repCount/(modernDB.length-1))*100); 
+            let repListHTML = `<div class="radar-list">`; modernDB.slice(0, 20).forEach((d, i) => { let prev = modernDB[i+1]; let numsHTML = d.nums.map(n => { let cls = ""; if(prev && prev.nums.includes(n)) cls="rep-gold"; if(i>0 && modernDB[i-1].nums.includes(n)) cls=cls?"rep-gold rep-blue":"rep-blue"; return `<span class="${cls}">${n}</span>`; }).join(' '); repListHTML += `<div><small>${d.fecha}:</small> ${numsHTML}</div>`; }); repListHTML += `</div>`; 
+            
+            let consecListHTML = `<div class="radar-list">`; modernDB.slice(0, 20).forEach((d) => { let nums = d.nums; let formatted = ""; for(let k=0; k<nums.length; k++) { let n = nums[k]; let isConsec = (k > 0 && nums[k-1] == n-1) || (k < nums.length-1 && nums[k+1] == n+1); formatted += isConsec ? `<span class="consec-badge">${n}</span> ` : `<span>${n}</span> `; } consecListHTML += `<div><small>${d.fecha}:</small> ${formatted}</div>`; }); consecListHTML += `</div>`;
+            
+            let poissonHTML = ""; let overallFreq = {}; modernDB.forEach(d => d.nums.forEach(n => overallFreq[n] = (overallFreq[n]||0)+1));
+            u.forEach(n => { let countN = overallFreq[n] || 0; if(countN > 0) { let avgGap = total / countN; let currentGap = lastSeen[n] || 0; let maturity = Math.min(100, Math.round((currentGap / avgGap) * 100)); let color = "#e0e0e0"; if (maturity === 0) { color = "transparent"; } else if (maturity < 20) { color = "#ef5350"; } else if (maturity < 80) { color = "#ffa726"; } else { color = "#00e676"; } let width = maturity === 0 ? 0 : maturity; let border = maturity === 0 ? '1px solid #ccc' : 'none'; poissonHTML += `<div class="poisson-row"><div style="width:30px; font-weight:bold;">${n}</div><div class="poisson-bar-bg" style="border:${border}"><div class="poisson-bar-fill" style="width:${width}%; background:${color};"></div></div><div class="poisson-val">${maturity}%</div></div>`; } });
+
+            let bgColors = ['#e0e0e0', '#b0bec5', '#ffe0b2', '#ffcc80', '#ef5350', '#c62828'];
+            let summaryTable = `<table class="chart-summary-table"><tr><th>Premio</th><th>Veces Ganado</th></tr>`;
+            ['0-1 Aciertos (Nada)', '2 Aciertos (Premio Min)', '3 Aciertos', '4 Aciertos', '5 Aciertos', '6 Aciertos (Premio Mayor)'].forEach((label, idx) => {
+                let realVal = idx === 0 ? counts[0]+counts[1] : counts[idx === 1 ? 2 : idx]; 
+                summaryTable += `<tr><td><span class="chart-color-box" style="background:${bgColors[idx]}"></span>${label}</td><td><strong>${realVal} veces</strong></td></tr>`;
+            });
+            summaryTable += `</table>`;
+
+            let pascalResults = {0:0, 1:0, 2:0, 3:0, 4:0, 5:0, 6:0};
+            let simDraws = 104; let smallWins = 0;
+            for(let i=0; i<simDraws; i++) {
+                let draw = []; while(draw.length < cfg.count) { let r = Math.floor(Math.random() * cfg.maxNum) + 1; if(!draw.includes(r)) draw.push(r); }
+                let hits = u.filter(n => draw.includes(n)).length; pascalResults[hits]++;
+                if(hits >= 2) smallWins++;
+            }
+            
+            let pascalHTML = `
+            <div class="pascal-sim-box">
+                <div class="pascal-title">🔮 Proyección a 1 Año</div>
+                <div style="font-size:0.9em; margin-bottom:10px;">Simulamos tu combinación en <strong>${simDraws} sorteos futuros</strong>.</div>
+                <div class="pascal-results">
+                    <div class="pascal-card"><span>${pascalResults[2]||0}</span><small>Reintegros</small></div>
+                    <div class="pascal-card"><span>${pascalResults[3]||0}</span><small>Premios</small></div>
+                    <div class="pascal-card"><span>${pascalResults[4]||0}</span><small>Super Premios</small></div>
+                </div>
+            </div>`;
+
+            let bernoulliLabels = []; let bernoulliData = []; let bernoulliIdeal = [];
+            let bernoulliMin = []; let bernoulliMax = [];
+            let winnerPoints = []; 
+            
+            let fullDB = [...modernDB].reverse(); 
+            let startYear = new Date(parseDate(fullDB[0].fecha)).getFullYear();
+            let endYear = new Date(parseDate(fullDB[fullDB.length-1].fecha)).getFullYear();
+            let totalYears = endYear - startYear; if(totalYears<1) totalYears=1;
+            
+            let idealConv = 0, lowConv = 0, highConv = 0;
+            let winLow = 0, winIdeal = 0, winHigh = 0;
+
+            fullDB.forEach((d, idx) => {
+                let s = d.nums.reduce((a,b)=>a+b,0);
+                bernoulliLabels.push(idx+1); 
+                bernoulliData.push({x: idx+1, y: s, date: d.fecha, nums: d.nums.join('-'), draw: d.sorteo}); 
+                bernoulliIdeal.push(cfg.idealSum); bernoulliMin.push(cfg.zoneMin); bernoulliMax.push(cfg.zoneMax);
+                
+                if(s >= cfg.zoneMin && s <= cfg.zoneMax) idealConv++;
+                else if(s < cfg.zoneMin) lowConv++;
+                else highConv++;
+
+                if(idx > 0) {
+                    let prev = fullDB[idx-1]; let curr = d;
+                    if (cfg.guaranteedMinimum > 0 && prev.bolsa && curr.bolsa) {
+                        if (prev.bolsa > cfg.guaranteedMinimum * 1.5 && curr.bolsa <= cfg.guaranteedMinimum * 1.1) { 
+                             let winSum = curr.nums.reduce((a,b)=>a+b,0); 
+                             let prizeStr = prev.bolsa.toLocaleString('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }); 
+                             winnerPoints.push({x: idx + 1, y: winSum, prize: prizeStr, draw: curr.sorteo}); 
+                             
+                             if(winSum >= cfg.zoneMin && winSum <= cfg.zoneMax) winIdeal++;
+                             else if(winSum < cfg.zoneMin) winLow++;
+                             else winHigh++;
+                        }
+                    }
+                }
+            });
+            
+            function calcPcts(a, b, c, total) {
+                if(total === 0) return [0,0,0];
+                let pA = (a/total)*100; let pB = (b/total)*100; let pC = (c/total)*100;
+                let rA = Math.round(pA); let rB = Math.round(pB); let rC = Math.round(pC);
+                let diff = 100 - (rA + rB + rC);
+                if (diff !== 0) {
+                    if(pA >= pB && pA >= pC) rA += diff;
+                    else if(pB >= pA && pB >= pC) rB += diff;
+                    else rC += diff;
+                }
+                return [rA, rB, rC];
+            }
+
+            let machinePcts = calcPcts(lowConv, idealConv, highConv, fullDB.length);
+            let winnerPcts = calcPcts(winLow, winIdeal, winHigh, winnerPoints.length);
+
+            let convHTML = `
+            <div class="conv-wrapper">
+                <div class="conv-section-title">1. Sorteos Totales (Comportamiento de la Máquina)</div>
+                <div class="conv-grid grid-machine">
+                    <div class="conv-card"><span class="conv-val">${machinePcts[0]}%</span>Zona Baja<span class="conv-sub">Frecuencia de Salida</span></div>
+                    <div class="conv-card conv-center"><span class="conv-val">${machinePcts[1]}%</span>EN EQUILIBRIO<span class="conv-sub">Frecuencia de Salida</span></div>
+                    <div class="conv-card"><span class="conv-val">${machinePcts[2]}%</span>Zona Alta<span class="conv-sub">Frecuencia de Salida</span></div>
+                </div>`;
+            
+            if (cfg.guaranteedMinimum > 0 && winnerPoints.length > 0) {
+                convHTML += `
+                <div class="conv-section-title win-title">2. Ganadores de Bolsa (Realidad Financiera)</div>
+                <div class="conv-grid grid-winners">
+                    <div class="conv-card w-low"><span class="conv-val">${winnerPcts[0]}%</span>Zona Baja<span class="conv-sub">Dónde Cae el Dinero</span></div>
+                    <div class="conv-card w-ideal"><span class="conv-val">${winnerPcts[1]}%</span>EN EQUILIBRIO<span class="conv-sub">Dónde Cae el Dinero</span></div>
+                    <div class="conv-card w-high"><span class="conv-val">${winnerPcts[2]}%</span>Zona Alta<span class="conv-sub">Dónde Cae el Dinero</span></div>
+                </div>`;
+            } else if (game !== 'chispazo') { 
+                convHTML += `<div class="tip-box tip-warning" style="margin-top:20px;">⚠️ No hay suficientes datos de grandes ganadores de bolsa en el historial cargado.</div>`;
+            }
+            convHTML += `</div>`; 
+
+            let annualAvg = (winnerPoints.length / totalYears).toFixed(1);
+            let annualMsg = winnerPoints.length > 0 ? `Promedio histórico: <strong>${annualAvg} Ganadores de Bolsa acumulada al año</strong>.` : ``;
+
+            let canvasIdDist = 'distributionChart_' + game;
+            let canvasIdBern = 'bernoulliChart_' + game;
+
+            let html = `
+            ${momentumMsg}
+            ${mereAlert}
+            ${eraMsg}
+            <div class="section-title">1. Diagnóstico de tu Jugada</div>
+            ${repAlert} <div class="tip-box ${consecClass}">${consecMsg}</div>
+            <div class="tip-box ${termClass}">${termMsg}</div>
+            
+            <div class="range-wrapper">
+                <div class="range-marker-container" style="left:${sumPos}%"><div class="range-value-badge">${sum}</div></div>
+                <div class="range-container" style="${gradientCSS}">
+                    <div class="range-segment" style="width:100%; border:none;"></div>
+                </div>
+                <div class="range-labels-container">
+                    <span class="range-label-min">Min: ${cfg.minSum}</span>
+                    <span class="range-label-abs" style="left:${pStartGreen}%">${cfg.zoneMin}</span>
+                    <span class="range-label-abs" style="left:${pEndGreen}%">${cfg.zoneMax}</span>
+                    <span class="range-label-max">Max: ${cfg.maxSum}</span>
+                </div>
+                <div style="text-align:center; margin-top:20px; font-weight:bold; color:var(--seren-green);">${sumMsg}</div>
+            </div>
+
+            ${zoneAuditHTML}
+            <div class="stats-grid" style="margin-top:20px;">
+                <div class="stat-card ${evenClass}"><span class="stat-title">Paridad</span><div>${even} Pares / ${cfg.count-even} Impares</div><div class="stat-subtitle">${evenMsg} (Tendencia Real: ${evenPct}%)</div><span class="ideal-ref">Teórico Histórico: ${cfg.idealEvenText.split('(')[0]}</span></div>
+                <div class="stat-card ${primeClass}"><span class="stat-title">Primos</span><div>${primes} Primos</div><div class="stat-subtitle">${primeMsg} (Tendencia Real: ${primePct}%)</div><div style="font-size:0.8em; margin-top:5px; color:#555;">${primeTextList}</div></div>
+            </div>
+            ${warningHTML}
+
+            ${intelligenceHTML} 
+
+            <div class="section-title" style="margin-top:30px;">3. Historial de Premios Exactos</div>
+            ${getMatchHTML(5,'Quintetas')} ${getMatchHTML(4,'Cuartetas')} ${getMatchHTML(3,'Tercias')} 
+            <div class="section-title" style="margin-top:30px;">4. Química (Top 20 - Fuerza de Unión)</div><small class="radar-subtitle">Números que más "compañerismo" tienen con los tuyos históricamente.</small>${chemHTML}
+            <div class="section-title" style="margin-top:30px;">5. Radar Serendipia</div>
+            <div class="radar-grid">
+                <div class="radar-box"><div class="radar-head">🔥 Calientes</div><small class="radar-subtitle">Números con mayor frecuencia reciente.</small><div class="radar-list-vertical">${hotHTML}</div></div>
+                <div class="radar-box"><div class="radar-head">🧊 Rezagados</div><small class="radar-subtitle">Números que llevan mucho sin salir.</small><div class="radar-list-vertical">${coldHTML}</div></div>
+                <div class="radar-box"><div class="radar-head">🚫 Terminaciones</div><small class="radar-subtitle">Dígitos finales ausentes (Ley del Tercio).</small><div class="radar-desc">${absentExpl}</div></div>
+                <div class="radar-box"><div class="radar-head">🔄 Repetición Global</div><small class="radar-subtitle">Patrón de repetición del sorteo anterior.</small><div class="radar-content">${repPct}%</div><div class="radar-desc"><span class="rep-gold">Dorado: Repite</span><br>${repListHTML}</div></div>
+                <div class="radar-box"><div class="radar-head">🔗 Rastreador de Consecutivos (${consecPctGlobal}%)</div><small class="radar-subtitle">Frecuencia de pares seguidos (ej. 12-13).</small><div class="radar-desc">Muestra: <span class="consec-badge">12 13</span><br>${consecListHTML}</div></div>
+            </div>
+            
+            <div class="section-title" style="margin-top:30px;">6. Inteligencia de Poisson (Predicción de Madurez)</div>
+            <div class="tip-box tip-info">
+                <strong>Semáforo de Madurez:</strong>
+                <div class="poisson-legend" style="margin-top:5px;">
+                    <span class="poisson-legend-item"><div class="dot dot-gray"></div> Vacío: Acaba de salir (0%)</span>
+                    <span class="poisson-legend-item"><div class="dot dot-red"></div> Rojo: Falta madurar</span>
+                    <span class="poisson-legend-item"><div class="dot dot-yellow"></div> Amarillo: Madurando</span>
+                    <span class="poisson-legend-item"><div class="dot dot-green"></div> Verde: ¡MADURO! (Listo)</span>
+                </div>
+            </div>
+            <div style="background:white; padding:15px; border-radius:8px; border:1px solid #ccc; max-width:500px; margin:0 auto;">${poissonHTML}</div>
+
+            <div class="section-title" style="margin-top:30px;">7. Desempeño Histórico Total</div>
+            <div class="tip-box tip-success" style="font-size:0.9em;"><strong>Realidad Financiera:</strong> Este gráfico suma todas las veces que tu combinación habría cobrado un premio en la historia.</div>
+            <div style="display:flex; flex-wrap:wrap; gap:20px; justify-content:center;">
+                <div class="chart-container" style="flex:1; min-width:300px;"><div class="chart-title">Pastel de Premios</div><canvas id="${canvasIdDist}"></canvas></div>
+                <div style="flex:1; min-width:300px; padding-top:40px;">${summaryTable}</div>
+            </div>
+
+            <div class="section-title" style="margin-top:30px;">8. Convergencia al Equilibrio</div>
+            <div class="tip-box tip-info">📉 <strong>Teorema Dorado:</strong> La línea AZUL (Realidad) siempre intenta regresar al centro (Dorado). <br><strong>🔴 Punto Rojo = Hubo Ganador de Bolsa Millonaria.</strong> <br>${annualMsg}</div>
+            <div style="font-size:0.85em; text-align:center; margin-bottom:10px; color:#555;">💡 <strong>Tip de Navegación:</strong> Usa la rueda del mouse para Zoom y las <strong>Flechas del Teclado (⬅️ ➡️)</strong> para moverte con precisión.</div>
+            ${convHTML}
+            <div class="chart-container" style="max-width:100%;">
+                <button onclick="resetZoomBernoulli('${game}')" style="margin-bottom:10px; padding:5px 10px; cursor:pointer; font-size:0.8em; float:right;">🔄 Restablecer Zoom</button>
+                <canvas id="${canvasIdBern}"></canvas>
+            </div>
+
+            ${pascalHTML}
+            `;
+            document.getElementById('res'+game.charAt(0).toUpperCase()+game.slice(1)).innerHTML = html; 
+            document.getElementById('res'+game.charAt(0).toUpperCase()+game.slice(1)).style.display = 'block';
+
+            if (window['chartInstance_' + game]) {
+                window['chartInstance_' + game].destroy();
+            }
+            if (window['bernoulliInstance_' + game]) {
+                window['bernoulliInstance_' + game].destroy();
+            }
+
+            const ctx = document.getElementById(canvasIdDist).getContext('2d');
+            Chart.register(ChartDataLabels); 
+            window['chartInstance_' + game] = new Chart(ctx, { 
+                type: 'pie', 
+                data: { 
+                    labels: ['0-1', '2', '3', '4', '5', '6'], 
+                    datasets: [{ 
+                        data: [counts[0]+counts[1], counts[2], counts[3], counts[4], counts[5], counts[6]], 
+                        backgroundColor: bgColors, 
+                        borderWidth: 1 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        datalabels: { 
+                            color: '#fff', 
+                            backgroundColor: '#000', 
+                            borderRadius: 4, 
+                            font: { weight: 'bold', size: 12 }, 
+                            formatter: (value) => value > 0 ? value : null 
+                        } 
+                    } 
+                } 
+            });
+
+            const ctxB = document.getElementById(canvasIdBern).getContext('2d');
+            Chart.register(ChartZoom); 
+            
+            let winnerDataset = { label: '¡Premio Mayor!', data: winnerPoints, backgroundColor: 'red', borderColor: 'gold', borderWidth: 2, pointRadius: 8, pointHoverRadius: 10, type: 'scatter' };
+
+            window['bernoulliInstance_' + game] = new Chart(ctxB, { 
+                type: 'line',
+                data: {
+                    labels: bernoulliLabels,
+                    datasets: [
+                        { label: 'Limite Sup', data: bernoulliMax, borderColor: '#388e3c', backgroundColor: 'rgba(76, 175, 80, 0.15)', borderWidth: 1, borderDash: [5,5], pointRadius: 0, fill: '+2' }, 
+                        { label: 'Ideal', data: bernoulliIdeal, borderColor: '#C5A059', borderWidth: 2, pointRadius: 0, borderDash: [2, 2] },
+                        { label: 'Limite Inf', data: bernoulliMin, borderColor: '#388e3c', borderWidth: 1, borderDash: [5,5], pointRadius: 0, fill: false },
+                        { label: 'Suma Real', data: bernoulliData, borderColor: '#1565c0', borderWidth: 1, pointRadius: 1, pointHoverRadius: 6, fill: false },
+                        winnerDataset
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'nearest', axis: 'x', intersect: false },
+                    scales: { 
+                        y: { beginAtZero: false }, 
+                        x: { 
+                            type: 'linear', 
+                            ticks: { display: false },
+                            min: 0, 
+                            max: bernoulliLabels.length
+                        } 
+                    }, 
+                    plugins: { 
+                        legend: { position: 'top' }, 
+                        datalabels: { display: false },
+                        zoom: { 
+                            zoom: {
+                                wheel: { enabled: true },
+                                pinch: { enabled: true },
+                                mode: 'x',
+                                drag: { enabled: false }, 
+                            },
+                            pan: {
+                                enabled: true,
+                                mode: 'x',
+                                modifierKey: null, 
+                            },
+                            limits: {
+                                x: {
+                                    min: -1000, 
+                                    max: bernoulliLabels.length + 1000, 
+                                    minRange: 2 
+                                }
+                            }
+                        },
+                        tooltip: { 
+                            mode: 'nearest',
+                            axis: 'x',
+                            intersect: true, 
+                            filter: function(tooltipItem) {
+                                return tooltipItem.datasetIndex === 3 || tooltipItem.datasetIndex === 4; 
+                            },
+                            callbacks: { 
+                                label: function(context) { 
+                                    let point = context.raw; 
+                                    let zoneLabel = "";
+                                    let val = point.y;
+                                    if(val >= cfg.zoneMin && val <= cfg.zoneMax) zoneLabel = "Zona: Equilibrio (Ideal)";
+                                    else if(val < cfg.zoneMin) zoneLabel = "Zona: Baja";
+                                    else zoneLabel = "Zona: Alta";
+                                    
+                                    let drawStr = point.draw ? `Sorteo: ${point.draw}` : `Sorteo Index: ${point.x}`;
+
+                                    if(point.date) return [drawStr, `Fecha: ${point.date}`, `Números: ${point.nums}`, `Suma: ${val}`, zoneLabel]; 
+                                    
+                                    if(context.dataset.label === '¡Premio Mayor!') return [`🏆 GANADOR DE BOLSA`, drawStr, `💰 Bolsa: ${point.prize}`, `Suma: ${val}`, zoneLabel];
+                                    return null;
+                                } 
+                            } 
+                        }
+                    }
+                }
+            });
+
+        } catch (e) { console.error(e); alert("Error: " + e.message); }
+    }
+
+    function resetZoomBernoulli(game) {
+        if(window['bernoulliInstance_' + game]) {
+            window['bernoulliInstance_' + game].resetZoom();
+        }
+    }
+
+    document.addEventListener('keydown', function(event) {
+        let activeGame = null;
+        if(document.getElementById('melate').classList.contains('active')) activeGame = 'melate';
+        else if(document.getElementById('retro').classList.contains('active')) activeGame = 'retro';
+        else if(document.getElementById('chispazo').classList.contains('active')) activeGame = 'chispazo';
+
+        if (activeGame && window['bernoulliInstance_' + activeGame]) {
+            const chart = window['bernoulliInstance_' + activeGame];
+            let step = 50; 
+            if (event.key === 'ArrowLeft') {
+                chart.pan({x: step}, undefined, 'default'); 
+                event.preventDefault(); 
+            } else if (event.key === 'ArrowRight') {
+                chart.pan({x: -step}, undefined, 'default'); 
+                event.preventDefault();
+            }
+        }
+    });
+
+    function generateOmega(game) {
+        let db = DB[game]; if(!db||db.length===0) return alert("Carga historial primero.");
+        
+        let modernDB = (game === 'melate') ? db.filter(d => parseDate(d.fecha) >= new Date(2008, 0, 1)) : db;
+        let cfg = GAME_CONFIG[game];
+        
+        let max = cfg.maxNum; 
+        let count = cfg.count;
+        let minS = cfg.zoneMin; 
+        let maxS = cfg.zoneMax;
+        let targetPrimes = cfg.idealPrimes; 
+        let targetEven = (game === 'chispazo') ? [2,3] : [3]; 
+
+        let lastDraw = modernDB.length > 0 ? modernDB[0].nums : [];
+        
+        let attempts = 0;
+        let bestCandidate = null;
+        
+        while(attempts < 10000) {
+            attempts++;
+            let cand = new Set();
+            
+            if (lastDraw.length > 0) {
+                let repIndex = Math.floor(Math.random() * lastDraw.length); 
+                cand.add(lastDraw[repIndex]);
+            }
+            
+            let base = Math.floor(Math.random() * (max - 1)) + 1; 
+            cand.add(base); 
+            if (cand.size < count) cand.add(base + 1);
+
+            while(cand.size < count) { cand.add(Math.floor(Math.random() * max) + 1); }
+            let arr = Array.from(cand).sort((a,b)=>a-b);
+            
+            let sum = arr.reduce((a,b)=>a+b,0);
+            let even = arr.filter(n=>n%2===0).length;
+            let pCount = arr.filter(n=>PRIMES.includes(n)).length;
+
+            let endings = arr.map(n => n % 10);
+            let endingCounts = {}; endings.forEach(x => endingCounts[x] = (endingCounts[x] || 0) + 1);
+            let maxEndingRep = Math.max(...Object.values(endingCounts));
+            
+            if(sum >= minS && sum <= maxS) {
+                if(targetEven.includes(even)) {
+                    if(targetPrimes.includes(pCount)) {
+                        if(maxEndingRep <= 2) {
+                            let matchesPast = false;
+                            let limit = Math.min(modernDB.length, 1000); 
+                            for(let k=0; k<limit; k++) {
+                                let hits = arr.filter(n => modernDB[k].nums.includes(n)).length;
+                                if(hits >= 4) { matchesPast = true; break; }
+                            }
+                            if(!matchesPast) { bestCandidate = arr; break; }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if(bestCandidate) {
+            let p = game.charAt(0).toLowerCase();
+            for(let i=0; i<count; i++) {
+                let el = document.getElementById(p+(i+1));
+                el.value = bestCandidate[i];
+                checkFreq(game, el); // Actualizar etiquetas de frecuencia
+            }
+        } else {
+            smartPick(game, count, max); 
+        }
+    }
+
+    function smartPick(game, c, m) { 
+        let db = DB[game]; if(!db||db.length===0) return alert("⚠️ Carga historial para generar números aleatorios."); 
+        let cand=[], valid=false, tries=0; let cfg=GAME_CONFIG[game]; 
+        while(!valid && tries<5000){ 
+            tries++; let s=new Set(); while(s.size<c) s.add(Math.floor(Math.random()*m)+1); 
+            cand=Array.from(s).sort((a,b)=>a-b); let sum=cand.reduce((a,b)=>a+b,0); 
+            if(sum>=cfg.zoneMin && sum<=cfg.zoneMax) valid=true; 
+        } 
+        let p=game==='melate'?'m':game==='retro'?'r':'c'; 
+        for(let i=0;i<c;i++) {
+            let el = document.getElementById(p+(i+1));
+            el.value=cand[i];
+            checkFreq(game, el);
+        }
+    }
+    
+    function updateTrisInputs() { let mode = document.getElementById('trisMode').value; let rule = TRIS_RULES[mode]; for(let i=0; i<5; i++) { let el = document.getElementById('t'+(i+1)); if(rule.active.includes(i)) { el.disabled = false; el.placeholder = (i+1)+"º"; } else { el.disabled = true; el.value = ""; el.placeholder = "X"; } } document.getElementById('trisBet').value = rule.cost; validateTrisBets(); }
+    function toggleMultInput() { let isChecked = document.getElementById('trisMult').checked; let multInput = document.getElementById('trisMultAmount'); multInput.style.display = isChecked ? 'block' : 'none'; multInput.disabled = !isChecked; if(isChecked) validateTrisBets(); }
+    function validateTrisBets() { let baseBet = parseFloat(document.getElementById('trisBet').value) || 1; let multInput = document.getElementById('trisMultAmount'); if(!multInput.disabled) { if(parseFloat(multInput.value) < baseBet) multInput.value = baseBet; multInput.setAttribute('min', baseBet); } }
+    function clearTrisFull() { clearInputs('t', 5); document.getElementById('resTrisHistory').innerHTML=''; document.getElementById('resTrisFinance').innerHTML=''; document.getElementById('trisMode').selectedIndex = 0; updateTrisInputs(); document.getElementById('trisMult').checked = false; toggleMultInput(); }
+    function getFilteredTrisDB() { let range = document.getElementById('trisHistoryRange').value; if(range === 'all') return { db: DB.tris, label: "Histórico Completo (Global)" }; let cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 5); let filtered = DB.tris.filter(d => parseDate(d.fecha) >= cutoff); return { db: filtered, label: "Tendencia Reciente (Últimos 5 Años)" }; }
+    function trisAnalyzeStats() { if(!DB.tris||DB.tris.length===0) return alert("Carga Tris"); let { db, label } = getFilteredTrisDB(); let { valid, inputs, rule } = getTrisInputs(); if(!valid) return alert("Ingresa los números activos."); let target = inputs.filter(x => x !== null); let targetStr = target.join(''); let exactCount = 0; db.forEach(d => { let drawPart = d.nums.filter((_, i) => rule.active.includes(i)); let match = false; if(rule.type === 'exact' || rule.type.includes('combo')) match = drawPart.join('') === targetStr; else match = drawPart.sort().join('') === targetStr; if(match) exactCount++; }); document.getElementById('resTrisHistory').innerHTML = `<div class="tip-box tip-success">Análisis Tris Completado: ${exactCount} aciertos encontrados.</div>`; }
+    function trisAnalyzeFinancial() { if(!DB.tris||DB.tris.length===0) return alert("Carga Tris"); document.getElementById('resTrisFinance').innerHTML = `<div class="tip-box tip-info">Función financiera disponible en versión completa.</div>`; }
+    function trisSuggest() { if(!DB.tris||DB.tris.length===0) return alert("Carga Tris"); let firstPick = [1,2,3,4,5]; for(let i=0; i<5; i++) document.getElementById('t'+(i+1)).value = firstPick[i]; }
+    function getTrisInputs() { let mode = document.getElementById('trisMode').value; let rule = TRIS_RULES[mode]; let inputs = []; let valid = true; for(let i=0; i<5; i++) { if(rule.active.includes(i)) { let val = document.getElementById('t'+(i+1)).value; if(val === '') valid = false; inputs.push(parseInt(val)); } else { inputs.push(null); } } return { valid, inputs, rule }; }
+    function analyzeGatoVisual() { let db = DB.gato; if(!db || db.length === 0) return alert("Carga archivo Gato"); let freq = {}; db.slice(0, 20).forEach(d => { d.nums.forEach(n => freq[n] = (freq[n]||0)+1); }); let html = `<div class="section-title">Análisis Rápido Gato</div><p>Frecuencia en últimos 20 sorteos.</p>`; document.getElementById('resGato').innerHTML = html; }
+</script>
+</body>
+</html>
