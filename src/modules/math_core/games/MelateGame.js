@@ -84,124 +84,146 @@ export class MelateGame extends GameStrategy {
    * @returns {Object} Análisis completo
    */
   analyze(numbers, historicalDraws = []) {
-    // Validar primero y forzar tipo numérico
     const validation = this.validate(numbers.map(n => Number(n)));
-
     if (!validation.ok) {
-      return {
-        gameId: this.id,
-        gameName: this.name,
-        numbers,
-        valid: false,
-        error: validation.error
-      };
+      return { gameId: this.id, valid: false, error: validation.error };
     }
 
-    // Forzar enteros y normalizar entrada
     const nums = numbers.map(n => parseInt(n, 10));
     const totalNumbers = nums.length;
     const sum = calculateSum(nums);
     const evenCount = countEvens(nums);
     const primeCount = countPrimes(nums);
+    
+    // --- Lógica de Diagnóstico ---
+    
+    // Parity Status
+    let parityStatus = 'warn';
+    if (this.config.idealEven?.includes(evenCount)) {
+      parityStatus = 'good';
+    } else if (this.config.badEven?.includes(evenCount)) {
+      parityStatus = 'bad';
+    }
 
-    // Normalizar cada sorteo histórico a formato { nums: number[], date: string|null }
+    // Prime Status
+    // Fallback seguro si la config falla
+    const idealPrimes = this.config.idealPrimes || [1, 2, 3]; 
+    const isPrimeIdeal = Array.isArray(idealPrimes) && idealPrimes.includes(primeCount);
+    
+    let primeStatus = 'warn';
+    if (isPrimeIdeal) {
+      primeStatus = 'good';
+    } else if (primeCount > 4 || primeCount < 1) {
+      primeStatus = 'bad';
+    }
+
+    const lastDraw = historicalDraws.length > 0 ? historicalDraws[0].nums.map(Number) : [];
+    const repeatedFromLast = nums.filter(n => lastDraw.includes(n));
+
+    let hasConsecutive = false;
+    for (let i = 0; i < nums.length - 1; i++) {
+      if (nums[i+1] === nums[i] + 1) {
+        hasConsecutive = true;
+        break;
+      }
+    }
+
+    const endings = nums.map(n => n % 10);
+    const endingCounts = {};
+    endings.forEach(x => endingCounts[x] = (endingCounts[x] || 0) + 1);
+    const maxEndingRep = Math.max(...Object.values(endingCounts), 0);
+    
+    const isArithmetic = (() => {
+        if(nums.length < 3) return false;
+        const diff = nums[1] - nums[0];
+        for(let i = 2; i < nums.length; i++) {
+            if(nums[i] - nums[i-1] !== diff) return false;
+        }
+        return true;
+    })();
+
+    const hotNumbers = [];
+    const coldNumbers = [];
+    // (La lógica de hot/cold se simplifica aquí, se puede expandir después)
+
+    const diagnostics = {
+      sum: {
+        value: sum,
+        min: this.config.minSum,
+        max: this.config.maxSum,
+        zoneMin: this.config.zoneMin,
+        zoneMax: this.config.zoneMax
+      },
+      parity: {
+        even: evenCount,
+        odd: totalNumbers - evenCount,
+        status: parityStatus,
+        trendPct: 0 // Placeholder
+      },
+      primes: {
+        count: primeCount,
+        status: primeStatus,
+        list: stats.PRIMES.values()
+      },
+      repetition: {
+        hasRepetition: repeatedFromLast.length > 0,
+        numbers: repeatedFromLast
+      },
+      consecutive: {
+        hasConsecutive: hasConsecutive,
+        historicalPct: 40 // Placeholder
+      },
+      terminations: {
+        maxRep: maxEndingRep
+      },
+      structure: {
+        clean: !isArithmetic, // Placeholder para una lógica más compleja
+        message: isArithmetic ? 'Secuencia aritmética detectada.' : ''
+      },
+      mix: {
+        hot: hotNumbers.length,
+        cold: coldNumbers.length
+      },
+      hotNumbers,
+      coldNumbers
+    };
+
+    // --- Lógica de Historial y Frecuencia (existente) ---
+    
     const normalizeDraw = (draw) => {
       if (!draw) return { nums: [], date: null };
       if (Array.isArray(draw)) return { nums: draw.map(d => Number(d)), date: null };
-      const candidate = draw.nums || draw.numbers || draw.draw || draw.drawNumbers || draw.values;
-      const numsArr = Array.isArray(candidate) ? candidate.map(d => Number(d)) : (Array.isArray(draw) ? draw.map(d => Number(d)) : []);
-      const dateRaw = draw.fecha || draw.date || draw.timestamp || draw.t || null;
-      const date = dateRaw ? (new Date(dateRaw)).toString() : null;
-      return { nums: numsArr, date };
+      const candidate = draw.nums || draw.numbers || [];
+      const numsArr = Array.isArray(candidate) ? candidate.map(d => Number(d)) : [];
+      const dateRaw = draw.fecha || draw.date || null;
+      return { nums: numsArr, date: dateRaw };
     };
 
     const inputSet = new Set(nums);
-    const totalHistorical = Array.isArray(historicalDraws) ? historicalDraws.length : 0;
-    const lastN = 20;
-    const recentDraws = Array.isArray(historicalDraws) ? historicalDraws.slice(Math.max(0, totalHistorical - lastN)) : [];
+    const totalHistorical = historicalDraws.length;
+    const matchHistory = { tercia: [], cuarteta: [], quinteta: [] };
 
-    const freqMap = {};
-    const lastSeenIndex = {}; // number -> last index seen
-
-    // Match history grouped
-    const matchHistory = { tercia: [], cuarteta: [], quinteta: [], sexteta: [] };
-
-    (historicalDraws || []).forEach((rawDraw, idx) => {
+    historicalDraws.forEach((rawDraw) => {
       const { nums: drawNums, date } = normalizeDraw(rawDraw);
       if (!drawNums || drawNums.length === 0) return;
-
-      // Update frequency map and last seen
-      drawNums.forEach(n => {
-        freqMap[n] = (freqMap[n] || 0) + 1;
-        lastSeenIndex[n] = idx;
-      });
-
-      // Compute intersection (only matched numbers)
+      
       const matched = drawNums.filter(n => inputSet.has(n));
       const hits = matched.length;
-      if (hits >= 3) {
-        const rec = { nums: matched.slice().sort((a,b)=>a-b), drawIndex: idx, date };
-        if (hits === 3) matchHistory.tercia.push(rec);
-        else if (hits === 4) matchHistory.cuarteta.push(rec);
-        else if (hits === 5) matchHistory.quinteta.push(rec);
-        else if (hits >= 6) matchHistory.sexteta.push(rec);
-      }
-    });
+      const rec = { nums: matched.sort((a,b)=>a-b), date };
 
-    // Recent frequency for input numbers in lastN draws
-    const recentFreq = {};
-    recentDraws.forEach(rawDraw => {
-      const { nums: drawNums } = normalizeDraw(rawDraw);
-      drawNums.forEach(n => { if (inputSet.has(n)) recentFreq[n] = (recentFreq[n] || 0) + 1; });
+      if (hits === 3) matchHistory.tercia.push(rec);
+      else if (hits === 4) matchHistory.cuarteta.push(rec);
+      else if (hits === 5) matchHistory.quinteta.push(rec);
     });
-
-    // Hot / Cold classification and arrays for UI
-    const hotNumbers = [];
-    const coldNumbers = [];
-    nums.forEach(n => {
-      const seen = recentFreq[n] || 0;
-      const pct = recentDraws.length === 0 ? 0 : (seen / recentDraws.length);
-      if (pct >= stats.FREQUENCY_HOT_THRESHOLD) hotNumbers.push({ number: n, frequency: +(pct * 100).toFixed(1) });
-      if (pct <= stats.FREQUENCY_COLD_THRESHOLD) {
-        const drawsAgo = (typeof lastSeenIndex[n] === 'number') ? (totalHistorical - lastSeenIndex[n] - 1) : totalHistorical;
-        coldNumbers.push({ number: n, drawsAgo });
-      }
-    });
-
-    // Prize distribution top numbers
-    const freqEntries = Object.keys(freqMap).map(k => ({ num: parseInt(k, 10), count: freqMap[k] }));
-    freqEntries.sort((a,b) => b.count - a.count);
-    const prizeDistribution = { labels: freqEntries.slice(0,10).map(e => String(e.num)), values: freqEntries.slice(0,10).map(e => e.count) };
-
-    // Bernoulli: evenness per position -> produce series as [{x: 'P1', y: 0.5}, ...]
-    const posCount = this.config.positions || nums.length;
-    const positionEven = new Array(posCount).fill(0);
-    let considered = 0;
-    (historicalDraws || []).forEach(rawDraw => {
-      const { nums: drawNums } = normalizeDraw(rawDraw);
-      if (!drawNums || drawNums.length < posCount) return;
-      considered++;
-      for (let i = 0; i < posCount; i++) { if (drawNums[i] % 2 === 0) positionEven[i]++; }
-    });
-    const bernoulliData = Array.from({length: posCount}, (_, i) => ({ x: `P${i+1}`, y: (considered === 0 ? 0 : +(positionEven[i] / considered).toFixed(3)) }));
 
     return {
       gameId: this.id,
       gameName: this.name,
       numbers: nums,
       valid: true,
-      sum,
-      totalNumbers,
-      evenCount,
-      primeCount,
-      frequency: freqMap,
-      prizeDistribution,
-      bernoulli: bernoulliData,
-      bernoulliData,
-      hotNumbers,
-      coldNumbers,
-      matchHistory,
-      meta: { historicalCount: totalHistorical, recentConsidered: recentDraws.length }
+      diagnostics: diagnostics, // Objeto anidado
+      matchHistory: matchHistory,
+      meta: { historicalCount: totalHistorical }
     };
   }
   

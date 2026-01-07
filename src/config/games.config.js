@@ -28,7 +28,7 @@ const MELATE = {
   zoneMax: 220,                           // [MATH-VERIFIED] Zona Verde
   guaranteedMinimum: 30000000,            // bolsa mínima garantizada ($30M)
   idealParityText: '3 Pares / 3 Impares', // distribución teórica (33% probabilidad)
-  idealPrimes: 3,                         // cantidad ideal de primos
+  idealPrimes: [1, 2, 3],                         // cantidad ideal de primos
   drawDaySpanish: 'Martes, Jueves, Sábado',
   drawDayEnglish: 'Tuesday, Thursday, Saturday',
   description: 'Lotería Nacional Mexicana - 6 números de 56',
@@ -54,7 +54,7 @@ const RETRO = {
   zoneMax: 150,                           // [MATH-VERIFIED] Zona Verde
   guaranteedMinimum: 5000000,             // bolsa mínima garantizada ($5M)
   idealParityText: '3 Pares / 3 Impares', // distribución teórica (33% probabilidad)
-  idealPrimes: 3,                         // cantidad ideal de primos
+  idealPrimes: [1, 2, 3],                         // cantidad ideal de primos
   drawDaySpanish: 'Diario',
   drawDayEnglish: 'Daily',
   description: 'Lotería Retro - 6 números de 39',
@@ -80,7 +80,7 @@ const CHISPAZO = {
   zoneMax: 100,                           // [MATH-VERIFIED] Zona Verde
   guaranteedMinimum: 0,                   // no aplica acumulado de bolsa
   idealParityText: '2 Pares / 3 Impares', // distribución diferente (32% probabilidad)
-  idealPrimes: 3,                         // cantidad ideal de primos
+  idealPrimes: [1, 2, 3],                         // cantidad ideal de primos
   drawDaySpanish: 'Diario',
   drawDayEnglish: 'Daily',
   description: 'Chispazo - 5 números de 28',
