@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serendipia - Test Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0B2B26 0%, #1a4d45 100%);
+        }
+        
+        .test-result {
+            margin: 10px 0;
+            padding: 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            border-left: 4px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .test-pass {
+            background-color: rgba(42, 157, 143, 0.1);
+            border-left-color: #2A9D8F;
+            color: #2A9D8F;
+        }
+        
+        .test-fail {
+            background-color: rgba(230, 57, 70, 0.1);
+            border-left-color: #E63946;
+            color: #E63946;
+        }
+        
+        .test-pass:hover {
+            background-color: rgba(42, 157, 143, 0.2);
+            transform: translateX(4px);
+        }
+        
+        .test-fail:hover {
+            background-color: rgba(230, 57, 70, 0.2);
+            transform: translateX(4px);
+        }
+        
+        .console-box {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            color: #C5A059;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .header {
+            border-bottom: 2px solid #C5A059;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            flex: 1;
+            padding: 15px;
+            background: rgba(197, 160, 89, 0.1);
+            border-left: 3px solid #C5A059;
+            border-radius: 4px;
+        }
+        
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #C5A059;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: rgba(197, 160, 89, 0.7);
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-8">
+        <div class="max-w-1000 mx-auto">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="text-4xl font-bold text-white mb-2">🧪 Serendipia Test Lab</h1>
+                <p class="text-gray-400">Laboratorio de Pruebas para Lógica Matemática y Persistencia</p>
+                <p class="text-xs text-gray-600 mt-2">Sprint 2-3 - Validación de Configuración, Funciones Puras y Data Layer</p>
+            </div>
+            
+            <!-- Stats -->
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-number" id="totalTests">0</div>
+                    <div class="stat-label">Total de Pruebas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="passedTests" style="color: #2A9D8F;">0</div>
+                    <div class="stat-label">Pruebas Exitosas</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number" id="failedTests" style="color: #E63946;">0</div>
+                    <div class="stat-label">Pruebas Fallidas</div>
+                </div>
+            </div>
+            
+            <!-- Console Output -->
+            <div class="console-box">
+                <div id="output"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Module -->
+    <div id="ui-playground" style="background: #1a3a35; border: 2px solid #C5A059; padding: 20px; margin: 20px auto; max-width: 1000px; min-height: 300px; border-radius: 8px;"></div>
+    <script type="module">
+        import { GAME_CONFIG } from './src/config/games.config.js';
+        import * as Statistics from './src/modules/math_core/statistics.js';
+        import { MelateGame } from './src/modules/math_core/games/MelateGame.js';
+        import { RetroGame } from './src/modules/math_core/games/RetroGame.js';
+        import { ChispazoGame } from './src/modules/math_core/games/ChispazoGame.js';
+        import { MathCore } from './src/modules/math_core/index.js';
+        import Ball from './src/modules/web_ui/components/Ball.js';
+        import GameSelector from './src/modules/web_ui/components/GameSelector.js';
+
+        // ============================================
+        // TEST FRAMEWORK
+        // ============================================
+
+        const results = [];
+        
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(`Assertion failed: ${message}`);
+            }
+        }
+        
+        function test(name, fn) {
+            try {
+                fn();
+                results.push({ status: 'PASS', name });
+                return true;
+            } catch (error) {
+                results.push({ status: 'FAIL', name, error: error.message });
+                return false;
+            }
+        }
+        
+        function render() {
+            const output = document.getElementById('output');
+            const totalTests = document.getElementById('totalTests');
+            const passedTests = document.getElementById('passedTests');
+            const failedTests = document.getElementById('failedTests');
+            
+            let html = '';
+            let passed = 0, failed = 0;
+            
+            results.forEach(result => {
+                if (result.status === 'PASS') {
+                    passed++;
+                    html += `<div class="test-result test-pass">✅ [PASS] ${result.name}</div>`;
+                } else {
+                    failed++;
+                    html += `<div class="test-result test-fail">❌ [FAIL] ${result.name}<br><small>${result.error}</small></div>`;
+                }
+            });
+            
+            output.innerHTML = html;
+            totalTests.textContent = results.length;
+            passedTests.textContent = passed;
+            failedTests.textContent = failed;
+        }
+
+        // ============================================
+        // SUITE 1: CONFIGURACIÓN DE JUEGOS
+        // ============================================
+        
+        console.log('📋 Suite 1: Configuración de Juegos (GAME_CONFIG)');
+        
+        test('GAME_CONFIG existe y es un objeto', () => {
+            assert(GAME_CONFIG, 'GAME_CONFIG debe estar definido');
+            assert(typeof GAME_CONFIG === 'object', 'GAME_CONFIG debe ser un objeto');
+        });
+        
+        test('Melate tiene configuración correcta', () => {
+            const melate = GAME_CONFIG.melate;
+            assert(melate.id === 'melate', 'ID debe ser "melate"');
+            assert(melate.positions === 6, 'Posiciones deben ser 6');
+            assert(melate.maxNumber === 56, 'Número máximo debe ser 56');
+            assert(melate.minNumber === 1, 'Número mínimo debe ser 1');
+            assert(melate.idealSum === 171, 'Suma ideal debe ser 171');
+            assert(melate.zoneMin === 120, 'Zona verde mín debe ser 120');
+            assert(melate.zoneMax === 220, 'Zona verde máx debe ser 220');
+            assert(melate.enabled === true, 'Melate debe estar habilitado');
+        });
+        
+        test('Retro tiene configuración correcta', () => {
+            const retro = GAME_CONFIG.retro;
+            assert(retro.id === 'retro', 'ID debe ser "retro"');
+            assert(retro.positions === 6, 'Posiciones deben ser 6');
+            assert(retro.maxNumber === 39, 'Número máximo debe ser 39');
+            assert(retro.idealSum === 120, 'Suma ideal debe ser 120');
+            assert(retro.zoneMin === 90, 'Zona verde mín debe ser 90');
+            assert(retro.zoneMax === 150, 'Zona verde máx debe ser 150');
+        });
+        
+        test('Chispazo tiene configuración correcta', () => {
+            const chispazo = GAME_CONFIG.chispazo;
+            assert(chispazo.id === 'chispazo', 'ID debe ser "chispazo"');
+            assert(chispazo.positions === 5, 'Posiciones deben ser 5');
+            assert(chispazo.maxNumber === 28, 'Número máximo debe ser 28');
+            assert(chispazo.idealSum === 72.5, 'Suma ideal debe ser 72.5');
+            assert(chispazo.zoneMin === 50, 'Zona verde mín debe ser 50');
+            assert(chispazo.zoneMax === 100, 'Zona verde máx debe ser 100');
+        });
+
+        // ============================================
+        // SUITE 2: FUNCIONES ESTADÍSTICAS (STATISTICS.JS)
+        // ============================================
+        
+        console.log('📊 Suite 2: Funciones Estadísticas');
+        
+        test('calculateSum([1,2,3]) = 6', () => {
+            const result = Statistics.calculateSum([1, 2, 3]);
+            assert(result === 6, `Esperado 6, obtenido ${result}`);
+        });
+        
+        test('calculateSum([10,20,30]) = 60', () => {
+            const result = Statistics.calculateSum([10, 20, 30]);
+            assert(result === 60, `Esperado 60, obtenido ${result}`);
+        });
+        
+        test('calculateSum([]) = 0', () => {
+            const result = Statistics.calculateSum([]);
+            assert(result === 0, `Esperado 0, obtenido ${result}`);
+        });
+        
+        test('countEvens([1,2,3,4]) = 2', () => {
+            const result = Statistics.countEvens([1, 2, 3, 4]);
+            assert(result === 2, `Esperado 2, obtenido ${result}`);
+        });
+        
+        test('countEvens([1,3,5]) = 0', () => {
+            const result = Statistics.countEvens([1, 3, 5]);
+            assert(result === 0, `Esperado 0, obtenido ${result}`);
+        });
+        
+        test('countEvens([2,4,6]) = 3', () => {
+            const result = Statistics.countEvens([2, 4, 6]);
+            assert(result === 3, `Esperado 3, obtenido ${result}`);
+        });
+        
+        test('countPrimes([1,2,3,4]) = 2 (primos: 2,3)', () => {
+            const result = Statistics.countPrimes([1, 2, 3, 4]);
+            assert(result === 2, `Esperado 2, obtenido ${result}`);
+        });
+        
+        test('countPrimes([10,15,20]) = 0', () => {
+            const result = Statistics.countPrimes([10, 15, 20]);
+            assert(result === 0, `Esperado 0, obtenido ${result}`);
+        });
+        
+        test('countPrimes([2,3,5,7]) = 4', () => {
+            const result = Statistics.countPrimes([2, 3, 5, 7]);
+            assert(result === 4, `Esperado 4, obtenido ${result}`);
+        });
+        
+        // ============================================
+        // SUITE 3: POISSON MATURITY
+        // ============================================
+        
+        console.log('⏱️  Suite 3: Cálculo de Madurez Poisson');
+        
+        test('calculatePoissonMaturity(20, 15) = 100 (maduro)', () => {
+            const result = Statistics.calculatePoissonMaturity(20, 15);
+            assert(result === 100, `Esperado 100, obtenido ${result}`);
+        });
+        
+        test('calculatePoissonMaturity(10, 15) = 66 (madurando)', () => {
+            const result = Statistics.calculatePoissonMaturity(10, 15);
+            assert(result === 66, `Esperado 66, obtenido ${result}`);
+        });
+        
+        test('calculatePoissonMaturity(2, 15) = 13 (falta madurar)', () => {
+            const result = Statistics.calculatePoissonMaturity(2, 15);
+            assert(result === 13, `Esperado 13, obtenido ${result}`);
+        });
+        
+        test('calculatePoissonMaturity(0, 15) = 0 (acaba de salir)', () => {
+            const result = Statistics.calculatePoissonMaturity(0, 15);
+            assert(result === 0, `Esperado 0, obtenido ${result}`);
+        });
+        
+        test('getMaturityLabel(95) retorna color "green"', () => {
+            const result = Statistics.getMaturityLabel(95);
+            assert(result.color === 'green', `Esperado "green", obtenido "${result.color}"`);
+            assert(result.emoji === '🟢', `Esperado "🟢", obtenido "${result.emoji}"`);
+        });
+
+        // ============================================
+        // SUITE 4: VALIDACIÓN DE MELATE
+        // ============================================
+        
+        console.log('🎮 Suite 4: Validación de Melate');
+        
+        const melateGame = new MelateGame(GAME_CONFIG.melate);
+        
+        test('MelateGame valida números correctos [1,5,10,20,30,45]', () => {
+            const result = melateGame.validate([1, 5, 10, 20, 30, 45]);
+            assert(result.ok === true, `Esperado ok=true, obtenido ${result.error}`);
+        });
+        
+        test('MelateGame rechaza cantidad incorrecta [1,2,3]', () => {
+            const result = melateGame.validate([1, 2, 3]);
+            assert(result.ok === false, 'Debe rechazar cantidad incorrecta');
+            assert(result.error.includes('6'), 'Error debe mencionar cantidad 6');
+        });
+        
+        test('MelateGame rechaza número fuera de rango [1,5,10,20,30,99]', () => {
+            const result = melateGame.validate([1, 5, 10, 20, 30, 99]);
+            assert(result.ok === false, 'Debe rechazar número fuera de rango');
+            assert(result.error.includes('99'), 'Error debe mencionar 99');
+        });
+        
+        test('MelateGame rechaza duplicados [1,5,10,20,30,30]', () => {
+            const result = melateGame.validate([1, 5, 10, 20, 30, 30]);
+            assert(result.ok === false, 'Debe rechazar duplicados');
+        });
+        
+        test('MelateGame rechaza números no ordenados [5,1,10,20,30,45]', () => {
+            const result = melateGame.validate([5, 1, 10, 20, 30, 45]);
+            assert(result.ok === false, 'Debe rechazar números no ordenados');
+            assert(result.error.includes('ascendente'), 'Error debe mencionar orden');
+        });
+        
+        test('MelateGame retorna Zona Verde correcta', () => {
+            const zone = melateGame.getGreenZone();
+            assert(zone.min === 120, `Zona min esperada 120, obtenida ${zone.min}`);
+            assert(zone.max === 220, `Zona max esperada 220, obtenida ${zone.max}`);
+        });
+        
+        test('MelateGame retorna Suma Ideal correcta', () => {
+            const ideal = melateGame.getIdealSum();
+            assert(ideal === 171, `Suma ideal esperada 171, obtenida ${ideal}`);
+        });
+
+        // ============================================
+        // SUITE 5: CAPA DE DATOS (Data Layer)
+        // ============================================
+        
+        console.log('💾 Suite 5: Capa de Datos');
+        
+        // Importar módulos data_layer
+        const { store, parser } = await (async () => {
+            const DataLayer = await import('./src/modules/data_layer/index.js').then(m => m.default);
+            return DataLayer;
+        })();
+        
+        test('DataLayer inicializa IndexedDB exitosamente', async () => {
+            try {
+                const initialized = await store.init();
+                assert(initialized === true, 'Init debe retornar true');
+                assert(store.isInitialized() === true, 'Store debe estar inicializado');
+            } catch (err) {
+                assert(false, `Error inicializando: ${err.message}`);
+            }
+        });
+        
+        test('DataLayer guarda datos de juego (mock Melate)', async () => {
+            try {
+                const mockDraws = [
+                    {
+                        fecha: new Date('2024-01-01'),
+                        nums: [5, 12, 25, 38, 45, 55],
+                        additional: 3
+                    },
+                    {
+                        fecha: new Date('2024-01-02'),
+                        nums: [2, 8, 15, 30, 42, 50],
+                        additional: 7
+                    },
+                    {
+                        fecha: new Date('2024-01-03'),
+                        nums: [1, 10, 20, 28, 40, 56],
+                        additional: 2
+                    },
+                    {
+                        fecha: new Date('2024-01-04'),
+                        nums: [3, 11, 22, 35, 48, 52],
+                        additional: 1
+                    },
+                    {
+                        fecha: new Date('2024-01-05'),
+                        nums: [4, 14, 26, 39, 46, 54],
+                        additional: 5
+                    }
+                ];
+                
+                const result = await store.saveGameData('melate', mockDraws);
+                assert(result.count === 5, `Count esperado 5, obtenido ${result.count}`);
+                assert(result.gameType === 'melate', `GameType debe ser 'melate'`);
+                assert(result.updatedAt !== null, 'updatedAt debe estar definido');
+            } catch (err) {
+                assert(false, `Error guardando: ${err.message}`);
+            }
+        });
+        
+        test('DataLayer recupera datos y verifica integridad', async () => {
+            try {
+                const retrieved = await store.getGameData('melate');
+                assert(Array.isArray(retrieved), 'Retrieved debe ser array');
+                assert(retrieved.length === 5, `Length esperado 5, obtenido ${retrieved.length}`);
+                assert(retrieved[0].nums.length === 6, 'Cada draw debe tener 6 números');
+                assert(retrieved[0].nums[0] === 5, 'Primer número del primer draw debe ser 5');
+                assert(retrieved[4].nums[0] === 4, 'Primer número del quinto draw debe ser 4');
+            } catch (err) {
+                assert(false, `Error recuperando: ${err.message}`);
+            }
+        });
+        
+        test('DataLayer parsea CSV simple correctamente', async () => {
+            try {
+                const csvContent = `fecha,num1,num2,num3,num4,num5,num6
+2024-01-10,6,13,24,31,44,51
+2024-01-09,7,15,27,32,43,53
+2024-01-08,8,16,28,33,41,55`;
+                
+                const result = await parser.parseCSVSimple(csvContent);
+                assert(result.ok === true, `Parse debe ser exitoso, error: ${result.error}`);
+                assert(result.draws.length === 3, `Draws esperados 3, obtenidos ${result.draws.length}`);
+                assert(result.draws[0].nums[0] === 6, 'Primer número debe ser 6');
+                assert(result.draws[2].nums[5] === 55, 'Último número del último draw debe ser 55');
+            } catch (err) {
+                assert(false, `Error parseando CSV: ${err.message}`);
+            }
+        });
+
+        // ============================================
+        // SUITE 6: NUEVOS JUEGOS (Retro y Chispazo)
+        // ============================================
+        
+        console.log('🎰 Suite 6: Validación de Retro y Chispazo');
+        
+        test('RetroGame rechaza número fuera de rango (40)', async () => {
+            try {
+                const retro = MathCore.createGame('retro');
+                const result = retro.validate([1, 5, 10, 20, 30, 40]);
+                assert(result.ok === false, 'Debe rechazar número 40 (fuera de rango 1-39)');
+                assert(result.error.includes('39'), `Error debe mencionar límite 39: ${result.error}`);
+            } catch (err) {
+                assert(false, `Error en RetroGame: ${err.message}`);
+            }
+        });
+        
+        test('RetroGame acepta 6 números válidos [1,5,10,20,30,39]', async () => {
+            try {
+                const retro = MathCore.createGame('retro');
+                const result = retro.validate([1, 5, 10, 20, 30, 39]);
+                assert(result.ok === true, `Debe aceptar números válidos, error: ${result.error}`);
+                assert(retro.getIdealSum() === 120, 'Suma ideal debe ser 120');
+                assert(retro.getGreenZone().min === 90, 'Zona mínima debe ser 90');
+                assert(retro.getGreenZone().max === 150, 'Zona máxima debe ser 150');
+            } catch (err) {
+                assert(false, `Error validando Retro: ${err.message}`);
+            }
+        });
+        
+        test('ChispazoGame rechaza 6 números (necesita 5)', async () => {
+            try {
+                const chispazo = MathCore.createGame('chispazo');
+                const result = chispazo.validate([1, 5, 10, 20, 28, 15]);
+                assert(result.ok === false, 'Debe rechazar 6 números');
+                assert(result.error.includes('5'), `Error debe mencionar 5 números: ${result.error}`);
+            } catch (err) {
+                assert(false, `Error en ChispazoGame: ${err.message}`);
+            }
+        });
+        
+        test('ChispazoGame acepta 5 números válidos [1,5,10,20,28]', async () => {
+            try {
+                const chispazo = MathCore.createGame('chispazo');
+                const result = chispazo.validate([1, 5, 10, 20, 28]);
+                assert(result.ok === true, `Debe aceptar 5 números válidos, error: ${result.error}`);
+                assert(chispazo.getIdealSum() === 72.5, 'Suma ideal debe ser 72.5');
+                assert(chispazo.getGreenZone().min === 50, 'Zona mínima debe ser 50');
+                assert(chispazo.getGreenZone().max === 100, 'Zona máxima debe ser 100');
+            } catch (err) {
+                assert(false, `Error validando Chispazo: ${err.message}`);
+            }
+        });
+
+        // ============================================
+        // RENDERIZAR RESULTADOS
+        // ============================================
+        
+        console.log('Renderizando resultados...');
+        render();
+
+        // UI PLAYGROUND MANUAL SETUP
+        (async () => {
+            console.group('🎨 DEBUG UI PLAYGROUND');
+            const playground = document.getElementById('ui-playground');
+            
+            if (!playground) {
+                console.error('❌ FATAL: No se encontró #ui-playground');
+                return;
+            }
+            console.log('✅ Contenedor encontrado:', playground);
+
+            // 1. Probar GameSelector
+            try {
+                console.log('--- Intentando renderizar GameSelector ---');
+                const selector = new GameSelector({
+                    activeGame: 'melate',
+                    games: Object.keys(GAME_CONFIG || {}),
+                    onGameChange: (g) => console.log('Juego cambiado:', g)
+                });
+                
+                const selectorEl = selector.render();
+                console.log('📦 Resultado de selector.render():', selectorEl);
+                
+                if (selectorEl instanceof HTMLElement) {
+                    playground.appendChild(selectorEl);
+                    console.log('✅ GameSelector agregado al DOM');
+                } else {
+                    console.error('❌ GameSelector.render() no devolvió un elemento HTML válido:', selectorEl);
+                }
+            } catch (e) {
+                console.error('💥 Excepción en GameSelector:', e);
+            }
+
+            // 2. Probar Balls
+            try {
+                console.log('--- Intentando renderizar Balls ---');
+                const row = document.createElement('div');
+                row.className = 'flex justify-center gap-4 mt-8'; // Tailwind classes
+                row.style.display = 'flex'; // Fallback por si Tailwind falla
+                row.style.gap = '1rem';
+                row.style.marginTop = '2rem';
+                
+                const balls = [];
+                for (let i = 1; i <= 6; i++) {
+                    const ball = new Ball({
+                        number: '',
+                        max: 56,
+                        frequency: i * 10,
+                        status: i % 2 === 0 ? 'hot' : 'cold'
+                    });
+                    
+                    const ballEl = ball.render();
+                    console.log(`🎱 Ball ${i} render():`, ballEl);
+                    
+                    if (ballEl instanceof HTMLElement) {
+                        row.appendChild(ballEl);
+                        balls.push(ball);
+                    } else {
+                        console.error(`❌ Ball ${i} falló al renderizar`);
+                    }
+                }
+                
+                playground.appendChild(row);
+                console.log('✅ Fila de bolas agregada al DOM');
+                
+            } catch (e) {
+                console.error('💥 Excepción en Balls:', e);
+            }
+            
+            console.groupEnd();
+        })();
+        
+        // Mostrar resumen en consola
+        const passed = results.filter(r => r.status === 'PASS').length;
+        const failed = results.filter(r => r.status === 'FAIL').length;
+        console.log(`\n✅ Pruebas Exitosas: ${passed}`);
+        console.log(`❌ Pruebas Fallidas: ${failed}`);
+        console.log(`📊 Total: ${results.length}`);
+        
+        if (failed === 0) {
+            console.log('🎉 ¡TODAS LAS PRUEBAS PASARON!');
+        } else {
+            console.log('⚠️  Hay pruebas que fallaron - revisar resultados arriba');
+        }
+    </script>
+</body>
+</html>

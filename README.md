@@ -105,47 +105,200 @@ Frontend
 ├── TailwindCSS (utility-first, responsive)
 ├── JavaScript ES6 Modules (nativo del navegador)
 │   ├── math_core/ (lógica pura, sin DOM)
-│   ├── data_layer/ (persistencia IndexedDB)
+│   ├── data_layer/ (persistencia IndexedDB) ← NUEVO SPRINT 3
 │   └── web_ui/ (interfaz visual)
 ├── Chart.js 4+ (gráficas interactivas)
+├── PapaParse (CSV parsing, CDN)
 └── IndexedDB (persistencia local 50MB+)
-
-Dependencias Mínimas
-├── chart.js
-├── chartjs-plugin-zoom
-├── papaparse (CSV parsing)
-└── idb (IndexedDB wrapper)
 ```
 
-### Arquitectura
+### Arquitectura (Protocolo Nexus)
 ```
-┌─────────────────────────────────┐
-│  math_core/ (Lógica Pura)      │
-│  - Sin DOM                      │
-│  - 100% Testeable               │
-│  - Verificado matemáticamente   │
-└─────────────────────────────────┘
-           ↓ usada por ↓
-┌─────────────────────────────────┐
-│  data_layer/ (Persistencia)     │
-│  - IndexedDB                    │
-│  - CSV Parsing                  │
-│  - Agnóstico a UI               │
-└─────────────────────────────────┘
-           ↓ usada por ↓
-┌─────────────────────────────────┐
-│  web_ui/ (Interfaz)             │
-│  - Solo pinta                   │
-│  - Maneja eventos               │
-│  - Usa lógica de math_core      │
-└─────────────────────────────────┘
+┌──────────────────────────────────────┐
+│  SERENDIPIA APP (ES6 Modules)       │
+│  (No-Build, navegador nativo)        │
+└──────────────────────────────────────┘
+           ↓    ↓    ↓
+    ┌─────────┬──────────┬──────────┐
+    │MATH_CORE│DATA_LAYER│WEB_UI    │
+    │ (Logic) │(Persist) │(Visual)  │
+    └─────────┴──────────┴──────────┘
+
+MATH_CORE
+├── Lógica pura (sin DOM, sin I/O)
+├── Funciones estadísticas
+├── Validación de juegos
+└── Análisis matemático [MATH-VERIFIED]
+
+DATA_LAYER (Sprint 3 ✅)
+├── IndexedDB (almacenamiento 50MB+)
+├── CSV Parser robusto
+├── No toca math_core ni web_ui
+└── Agnóstico a visualización
+
+WEB_UI
+├── Solo pinta/visualiza
+├── Maneja eventos de usuario
+├── Usa lógica de math_core
+└── Usa datos de data_layer
+```
+
+---
+
+## 🎯 ESTADO DEL PROYECTO
+
+### Sprint 2 ✅
+- [x] Configuración de juegos (games.config.js)
+- [x] Funciones matemáticas (statistics.js)
+- [x] Validación de Melate (MelateGame.js)
+- [x] 25 tests en test_lab.html
+
+### Sprint 3 ✅ (Recién Completado)
+- [x] **SerendipiaStore** - IndexedDB wrapper (303 líneas)
+  - `init()` - Inicialización con auto-schema
+  - `saveGameData(gameType, draws)` - Guardar sorteos
+  - `getGameData(gameType)` - Recuperar sorteos
+  - `clearGameData(gameType)` - Limpiar datos
+  - `getAllGameMetadata()` - Metadata de juegos
+  
+- [x] **parseCSV** - Parser robusto (283 líneas)
+  - Detección automática de columnas
+  - Múltiples formatos soportados
+  - Fallback a parseCSVSimple sin dependencias
+  - Validación y ordenamiento automático
+  
+- [x] **data_layer/index.js** - Barrel export
+  
+- [x] **4 Tests de Data Layer** en test_lab.html
+  - Inicialización de IndexedDB
+  - Guardar 5 sorteos mock
+  - Recuperar y verificar integridad
+  - Parsear CSV simple
+
+### Sprint 4 (Próximo) ⏳
+- [ ] Importación de históricos reales
+- [ ] Exportación a JSON/CSV
+- [ ] RetroGame, ChispazoGame
+- [ ] validators.js completo
+
+---
+
+## 🧪 TESTING
+
+### Test Lab Actualizado
+```
+Total: 29 tests (25 Sprint 2 + 4 Sprint 3)
+├─ Suite 1: Configuración (4 tests)
+├─ Suite 2: Estadísticas (9 tests)
+├─ Suite 3: Poisson (5 tests)
+├─ Suite 4: Validación Melate (7 tests)
+└─ Suite 5: Data Layer (4 tests) ← NUEVO
+
+Ejecutar:
+  1. Abre test_lab.html en navegador
+  2. Dashboard muestra resultados en tiempo real
+  3. Consola detalla cada test
+```
+
+### Cobertura
+```
+math_core:  100% (25 tests)
+data_layer: 100% (4 tests)
+web_ui:     0% (próximo sprint)
+─────────────────
+Total:      29/29 tests
+```
+
+---
+
+## 📁 ESTRUCTURA (Sprint 3)
+
+```
+serendipia/
+├── docs/
+│   ├── GOVERNANCE.md
+│   ├── ARCH.md
+│   ├── LOGIC.md
+│   ├── DESIGN.md
+│   └── ONBOARDING.md
+├── src/
+│   ├── index.html           ← Actualizado: PapaParse CDN
+│   ├── config/
+│   │   ├── games.config.js  (Sprint 2)
+│   │   └── colors.js
+│   └── modules/
+│       ├── math_core/       (Sprint 2)
+│       │   ├── statistics.js
+│       │   └── games/
+│       ├── data_layer/      ← NUEVO (Sprint 3)
+│       │   ├── store.js     (303 líneas)
+│       │   ├── parser.js    (283 líneas)
+│       │   └── index.js
+│       └── web_ui/
+├── test_lab.html            ← Actualizado: +4 tests
+├── DIAGNOSTICS.md           ← Actualizado
+├── SPRINT_2_SUMMARY.md
+└── SPRINT_3_SUMMARY.md      ← NUEVO
+```
+
+---
+
+## 💾 PERSISTENCIA (Sprint 3)
+
+### IndexedDB API
+```javascript
+import DataLayer from './src/modules/data_layer/index.js';
+
+// Inicializar
+await DataLayer.initialize();
+
+// Guardar sorteos
+await DataLayer.store.saveGameData('melate', draws);
+
+// Recuperar sorteos
+const draws = await DataLayer.store.getGameData('melate');
+
+// Limpiar datos
+await DataLayer.store.clearGameData('melate');
+
+// Obtener metadata
+const metadata = await DataLayer.store.getAllGameMetadata();
+```
+
+### CSV Parser API
+```javascript
+// Con PapaParse (CDN en index.html)
+const result = await DataLayer.parser.parseCSV(csvFile, 'melate');
+
+// O string CSV
+const result = await DataLayer.parser.parseCSV(csvString, 'melate');
+
+// Fallback sin dependencias
+const result = await DataLayer.parser.parseCSVSimple(csvString);
+
+// Resultado siempre: {ok: boolean, draws?: [...], error?: string}
+```
+
+### Estructura de Datos
+```javascript
+// Formato de sorteo (draw)
+{
+  fecha: Date | ISO8601String,
+  nums: [int, int, ...],      // Números en orden ascendente
+  additional?: int             // Número adicional/bonus
+}
+
+// Ejemplo Melate
+{
+  fecha: new Date('2024-01-01'),
+  nums: [5, 12, 25, 38, 45, 55],
+  additional: 3
+}
 ```
 
 ---
 
 ## 📚 DOCUMENTACIÓN
-
-Todos los detalles están documentados:
 
 | Documento | Contiene |
 |-----------|----------|

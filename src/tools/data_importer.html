@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serendipia - Data Importer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/papaparse/5.4.1/papaparse.min.js"></script>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #0B2B26 0%, #1a4d45 100%);
+        }
+        
+        .import-container {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+        }
+        
+        .file-input {
+            padding: 12px;
+            border: 2px dashed #C5A059;
+            border-radius: 4px;
+            background: rgba(197, 160, 89, 0.05);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input:hover {
+            background: rgba(197, 160, 89, 0.1);
+            border-color: #C5A059;
+        }
+        
+        .preview-box {
+            background: rgba(42, 157, 143, 0.1);
+            border: 1px solid rgba(42, 157, 143, 0.3);
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            color: #2A9D8F;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .success-message {
+            background: rgba(42, 157, 143, 0.2);
+            border-left: 4px solid #2A9D8F;
+            color: #2A9D8F;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .error-message {
+            background: rgba(230, 57, 70, 0.2);
+            border-left: 4px solid #E63946;
+            color: #E63946;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary {
+            background: #2A9D8F;
+            color: white;
+        }
+        
+        .button-primary:hover {
+            background: #1f7570;
+            transform: translateY(-2px);
+        }
+        
+        .button-primary:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .button-secondary {
+            background: #C5A059;
+            color: #0B2B26;
+        }
+        
+        .button-secondary:hover {
+            background: #d9b66a;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.2);
+        }
+        
+        .stat-label {
+            color: rgba(197, 160, 89, 0.7);
+        }
+        
+        .stat-value {
+            color: #C5A059;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen p-8">
+        <div class="max-w-2xl mx-auto">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-white mb-2">📊 Serendipia Data Importer</h1>
+                <p class="text-gray-400">Herramienta para importar datos históricos de sorteos</p>
+                <p class="text-xs text-gray-600 mt-2">Sprint 4 - Importación Masiva a IndexedDB</p>
+            </div>
+
+            <!-- Import Form -->
+            <div class="import-container">
+                <!-- Game Selector -->
+                <div class="mb-6">
+                    <label class="block text-white mb-3">Selecciona el Juego:</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 text-white cursor-pointer">
+                            <input type="radio" name="game" value="melate" checked>
+                            🎱 Melate (6 de 56)
+                        </label>
+                        <label class="flex items-center gap-2 text-white cursor-pointer">
+                            <input type="radio" name="game" value="retro">
+                            🎱 Retro (6 de 39)
+                        </label>
+                        <label class="flex items-center gap-2 text-white cursor-pointer">
+                            <input type="radio" name="game" value="chispazo">
+                            🔥 Chispazo (5 de 28)
+                        </label>
+                    </div>
+                </div>
+
+                <!-- File Input -->
+                <div class="mb-6">
+                    <label class="block text-white mb-3">Carga tu archivo CSV:</label>
+                    <input 
+                        type="file" 
+                        id="csvFile" 
+                        accept=".csv" 
+                        class="file-input w-full"
+                        placeholder="Selecciona archivo CSV"
+                    >
+                </div>
+
+                <!-- Preview Section -->
+                <div id="previewSection" class="mb-6" style="display: none;">
+                    <h3 class="text-white font-bold mb-3">📋 Vista Previa:</h3>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">Total de registros encontrados:</span>
+                        <span class="stat-value" id="totalRecords">0</span>
+                    </div>
+                    
+                    <div class="preview-box">
+                        <div class="mb-4">
+                            <div class="text-sm opacity-75 mb-2">Primeros 5 registros:</div>
+                            <div id="previewFirst"></div>
+                        </div>
+                        <div class="border-t border-gray-600 pt-4">
+                            <div class="text-sm opacity-75 mb-2">Últimos 5 registros:</div>
+                            <div id="previewLast"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs text-gray-500 mb-4">
+                        ✓ Formato válido | ✓ Datos consistentes
+                    </div>
+
+                    <button 
+                        id="importBtn" 
+                        class="button button-primary w-full"
+                        onclick="importData()"
+                    >
+                        ✓ Confirmar Importación
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div id="successMessage" class="success-message" style="display: none;">
+                    <strong>✅ ¡Importación Exitosa!</strong>
+                    <div id="successText"></div>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <strong>❌ Error en la Importación</strong>
+                    <div id="errorText"></div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="mt-8 p-6 bg-rgba(197, 160, 89, 0.1) border border-gray-600 rounded">
+                <h3 class="text-white font-bold mb-3">📖 Instrucciones:</h3>
+                <ol class="text-gray-300 text-sm space-y-2">
+                    <li>1. Selecciona el tipo de juego (Melate, Retro o Chispazo)</li>
+                    <li>2. Carga un archivo CSV con el histórico de sorteos</li>
+                    <li>3. Verifica la vista previa (primeros y últimos registros)</li>
+                    <li>4. Haz click en "Confirmar Importación" para guardar en la BD</li>
+                    <li>5. Los datos se almacenarán en IndexedDB (navegador)</li>
+                </ol>
+                
+                <h4 class="text-white font-bold mt-4 mb-2">📝 Formato de CSV esperado:</h4>
+                <pre class="bg-black p-3 rounded text-xs text-green-400 overflow-x-auto">fecha,num1,num2,num3,num4,num5,num6[,bonus]
+2024-01-01,5,12,25,38,45,55[,3]
+2024-01-02,8,14,22,31,44,52[,7]
+...</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Module -->
+    <script type="module">
+        import { GAME_CONFIG } from '/src/config/games.config.js';
+        import DataLayer from '/src/modules/data_layer/index.js';
+
+        console.log('🧭 Data Importer loaded - using absolute paths');
+
+        // Expose for debugging
+        window.DataLayer = DataLayer;
+        window.currentParsedData = null;
+
+        const csvInput = document.getElementById('csvFile');
+        const previewSection = document.getElementById('previewSection');
+        const importBtn = document.getElementById('importBtn');
+        const previewFirst = document.getElementById('previewFirst');
+        const totalRecords = document.getElementById('totalRecords');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const successText = document.getElementById('successText');
+
+        // Disable import button until parse succeeds
+        importBtn.disabled = true;
+
+        csvInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            clearMessages();
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
+
+            console.log('📥 File selected:', file.name, file.size, file.type);
+
+            try {
+                const gameId = document.querySelector('input[name="game"]:checked').value;
+                console.log('🔎 Parsing as game:', gameId);
+
+                // Use robust wrapper (supports PapaParse or fallback)
+                const result = await DataLayer.parser.parseHistoricalDrawsCSV(file, gameId);
+                console.log('🧾 parse result:', result);
+
+                if (!result || !result.ok) {
+                    showError(`Error parseando CSV: ${result && result.error ? result.error : 'Unknown error'}`);
+                    importBtn.disabled = true;
+                    return;
+                }
+
+                window.currentParsedData = result.draws;
+                renderPreviewTable(result.draws.slice(0, 5));
+                totalRecords.textContent = result.draws.length;
+                previewSection.style.display = 'block';
+                importBtn.disabled = false;
+                console.log('✅ Parse successful — preview ready, import enabled');
+            } catch (err) {
+                console.error('❌ Parsing exception:', err);
+                showError(`Error al procesar archivo: ${err.message}`);
+                importBtn.disabled = true;
+            }
+        });
+
+        /**
+         * Renders a simple table for first records
+         * @param {Array} rows
+         */
+        function renderPreviewTable(rows) {
+            if (!Array.isArray(rows)) return;
+
+            let html = `
+                <table class="w-full text-xs text-left">
+                    <thead>
+                        <tr class="text-gray-300">
+                            <th class="pb-2">Fecha</th>
+                            <th class="pb-2">Números</th>
+                            <th class="pb-2">Adicional</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            rows.forEach(r => {
+                const fecha = formatDate(r.fecha);
+                const nums = Array.isArray(r.nums) ? r.nums.join(', ') : '';
+                const add = r.additional || '';
+                html += `<tr class="border-t border-gray-700"><td class="py-2">${fecha}</td><td class="py-2">${nums}</td><td class="py-2">${add}</td></tr>`;
+            });
+
+            html += `</tbody></table>`;
+            previewFirst.innerHTML = html;
+        }
+
+        function formatDate(date) {
+            try {
+                const d = new Date(date);
+                return d.toLocaleDateString('es-ES');
+            } catch (e) {
+                return String(date);
+            }
+        }
+
+        // Import button handler
+        window.importData = async function() {
+            clearMessages();
+            if (!window.currentParsedData || window.currentParsedData.length === 0) {
+                showError('No hay datos para importar');
+                return;
+            }
+
+            importBtn.disabled = true;
+            importBtn.textContent = 'Importando...';
+
+            try {
+                console.log('🔌 Initializing DataLayer...');
+                const initialized = await DataLayer.initialize();
+                if (!initialized) {
+                    throw new Error('DataLayer initialization failed');
+                }
+
+                const gameId = document.querySelector('input[name="game"]:checked').value;
+                console.log(`💾 Saving ${window.currentParsedData.length} draws for ${gameId}`);
+
+                const result = await DataLayer.store.saveGameData(gameId, window.currentParsedData);
+                console.log('✅ Save result:', result);
+
+                showSuccess(`✓ Se importaron <strong>${result.count}</strong> sorteos de <strong>${gameId.toUpperCase()}</strong><br>✓ Rango: ${formatDate(result.firstDate)} — ${formatDate(result.lastDate)}`);
+
+                // Cleanup
+                csvInput.value = '';
+                previewSection.style.display = 'none';
+                window.currentParsedData = null;
+            } catch (err) {
+                console.error('❌ Import error:', err);
+                showError(`Error importando datos: ${err.message}`);
+            } finally {
+                importBtn.disabled = true;
+                importBtn.textContent = '✓ Confirmar Importación';
+            }
+        };
+
+        function clearMessages() {
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            errorText.innerHTML = '';
+            successText.innerHTML = '';
+        }
+
+        function showError(message) {
+            errorMessage.style.display = 'block';
+            successMessage.style.display = 'none';
+            errorText.innerHTML = message;
+            console.error('UI Error:', message);
+        }
+
+        function showSuccess(message) {
+            successMessage.style.display = 'block';
+            errorMessage.style.display = 'none';
+            successText.innerHTML = message;
+            console.log('UI Success:', message);
+        }
+    </script>
+</body>
+</html>
